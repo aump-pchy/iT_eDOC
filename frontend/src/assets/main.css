@@ -1,0 +1,24 @@
+@import './base.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { font-family: 'Mitr', system-ui, sans-serif; }
+  body { background: #ffffff; }
+  #app  { min-height: 100vh; }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-medium
+           hover:bg-rose-800 transition-colors cursor-pointer;
+  }
+  .btn-secondary {
+    @apply border border-rose-200 text-rose-700 px-4 py-2 rounded-lg text-sm font-medium
+           hover:bg-rose-50 transition-colors cursor-pointer;
+  }
+  .card {
+    @apply bg-white border border-gray-100 rounded-xl p-5 shadow-sm;
+  }
+}
