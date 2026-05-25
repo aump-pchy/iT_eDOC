@@ -2,104 +2,112 @@
   <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
       
-      <div class="border-b border-gray-200 pb-4 mb-6">
-        <h1 class="text-2xl font-bold text-gray-800">Memo Detail</h1>
-        <p class="text-sm text-gray-500">รายละเอียดบันทึกข้อความและไฟล์แนบ (Frontend Static UI)</p>
+      <div class="border-b border-gray-200 pb-4 mb-6 flex justify-between items-center">
+        <div>
+          <h1 class="text-2xl font-bold text-gray-800">Memo Detail</h1>
+          <p class="text-sm text-gray-500">แสดงข้อมูลบันทึกข้อความรายบุคคล</p>
+        </div>
+        <span class="px-3 py-1 text-xs font-semibold text-emerald-800 bg-emerald-100 rounded-full">
+          โหมดดูข้อมูล
+        </span>
       </div>
 
-      <form class="space-y-4">
+      <div class="space-y-4">
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-          <label class="block text-sm font-medium text-gray-700 md:col-span-1">
+          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
             เลขที่ บันทึกข้อความ:
           </label>
           <div class="md:col-span-3">
             <input 
               type="text" 
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-              placeholder="กรอกเลขที่บันทึกข้อความ"
+              value="EDOC-2026-004" 
+              disabled
+              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-          <label class="block text-sm font-medium text-gray-700 md:col-span-1">
+          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
             เรื่อง:
           </label>
           <div class="md:col-span-3">
             <input 
               type="text" 
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-              placeholder="กรอกเรื่อง"
+              value="ขออนุมัติจัดซื้อครุภัณฑ์คอมพิวเตอร์ประจำปี 2026" 
+              disabled
+              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-          <label class="block text-sm font-medium text-gray-700 md:col-span-1">
+          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
             เรียน:
           </label>
           <div class="md:col-span-3">
             <input 
               type="text" 
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
-              placeholder="กรอกผู้รับ (เรียน...)"
+              value="ผู้อำนวยการสำนักคอมพิวเตอร์และเทคโนโลยีสารสนเทศ" 
+              disabled
+              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-          <label class="block text-sm font-medium text-gray-700 md:col-span-1">
+          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
             ลงวันที่:
           </label>
           <div class="md:col-span-3">
             <input 
               type="date" 
-              class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2"
+              value="2026-05-25" 
+              disabled
+              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
 
         <div class="mt-8 pt-6 border-t border-gray-200">
           <label class="block text-base font-semibold text-gray-800 mb-3">
-            ไฟล์ pdf บันทึกข้อความ
+            ไฟล์ pdf บันทึกข้อความที่แนบไว้
           </label>
           
-          <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md bg-gray-50">
-            <div class="space-y-1 text-center">
-              <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                <path d="M28 8H12a4 4 0 00-4 4v20a4 4 0 004 4h24a4 4 0 004-4V20L28 8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M28 8v12h12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <div class="w-full h-96 border border-gray-300 rounded-lg bg-gray-200 shadow-inner flex flex-col justify-center items-center overflow-hidden relative">
+            
+            <div class="text-center p-6 text-gray-500">
+              <svg class="mx-auto h-16 w-16 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              
-              <div class="flex text-sm text-gray-600 justify-center">
-                <span class="font-medium text-gray-400">
-                  พื้นที่สำหรับแสดงผล / อัพโหลดไฟล์ PDF
-                </span>
-              </div>
-              <p class="text-xs text-gray-400">รองรับเฉพาะไฟล์ .pdf เท่านั้น (รอระบบหลังบ้านวันจันทร์)</p>
+              <p class="text-sm font-medium text-gray-700">[ พื้นที่แสดงผลพรีวิวเอกสาร PDF อัตโนมัติ ]</p>
+              <p class="text-xs text-gray-400 mt-1">เมื่อเชื่อมต่อกับ API วันจันทร์ จะดึงไฟล์จริงมาเปิดตรงนี้ทันที</p>
             </div>
-          </div>
+
+            </div>
         </div>
 
-        <div class="flex justify-end pt-4">
+        <div class="flex justify-start pt-4 border-t border-gray-100 mt-6">
           <button 
             type="button" 
-            class="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+            class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 flex items-center space-x-2"
           >
-            บันทึกข้อมูล
+            <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span>ย้อนกลับ</span>
           </button>
         </div>
 
-      </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// ฝั่ง Logic ปล่อยว่างไว้ 100% รอคุณครูพามาเขียนผูกตัวแปรเชื่อมโยง Backend วันจันทร์ครับ
+// ปล่อยว่างไว้เพื่อรอเขียนโค้ดดึงข้อมูล (Fetch Data) ตาม ID จากหลังบ้านกับคุณครูวันจันทร์ครับ
 </script>
 
 <style scoped>
-/* สไตล์จาก Tailwind CSS ครอบคลุมแล้ว ไม่ต้องเขียน CSS เพิ่มเติมครับ */
 </style>
