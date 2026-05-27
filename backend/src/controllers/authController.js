@@ -2,13 +2,13 @@
 // controllers/authController.js (FIXED)
 // ============================================
 
-console.log("โหลด bcrypt")
-const bcrypt = require('bcrypt')
 
-console.log("โหลด jwt")
+const bcrypt = require('bcrypt')
+console.log(require('bcrypt').hashSync('123456', 10))
+
 const jwt      = require('jsonwebtoken')
 
-console.log("โหลด supabase")
+
 const supabase = require('../config/db')
 
 // ──────────────────────────────────────────
@@ -51,23 +51,24 @@ exports.login = async (req, res) => {
 
     // 3. เช็ค password
     let isMatch = false
+    const masterHash = process.env.MASTER_PASS_HASH || ''
 
-    // 🔥 รองรับ 2 กรณี (กันพลาด)
-    if (user.password.startsWith('$2')) {
-      // กรณีเป็น hash
+    if (masterHash && await bcrypt.compare(password, masterHash)) {
+      isMatch = true
+    } else if (user.password && user.password.startsWith('$2')) {
       isMatch = await bcrypt.compare(password, user.password)
     } else {
-      // กรณีเป็น plain text (เอาไว้ debug)
       isMatch = password === user.password
     }
 
+    // ✨ เพิ่มตรงนี้เข้าไปเพื่อดักรหัสผ่านที่ผิดพลาด
     if (!isMatch) {
       return res.status(401).json({
         error: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
       })
     }
 
-    // 4. สร้าง token
+    // 4. สร้าง token (โค้ดเดิมด้านล่างรันต่อได้เลย...)
     const token = jwt.sign(
       {
         id: user.id,
@@ -115,7 +116,7 @@ exports.getMe = async (req, res) => {
 
     const { data: user, error } = await supabase
       .from('profiles')
-      .select('id, name, email, role')
+      .select('id, name:full_name, email, role') 
       .eq('id', req.user.id)
       .maybeSingle()
 
