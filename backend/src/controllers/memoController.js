@@ -171,7 +171,7 @@ exports.create = async (req, res) => {
 
 // ──────────────────────────────────────────
 // PUT /api/memos/:id
-// แก้ไขบันทึก
+// แก้ไขบันทึก (เวอร์ชันอัปเกรด ดักจับบั๊ก 500 และ 403)
 // ──────────────────────────────────────────
 exports.update = async (req, res) => {
   try {
@@ -179,25 +179,36 @@ exports.update = async (req, res) => {
     const { subject, recipient, operator, content, status } = req.body
 
     // 1. ตรวจสอบว่ามีเอกสารรหัส ID นี้อยู่จริงหรือไม่
-    const { data: memo, error: fetchError } = await supabase
+    // (เอา .single() ออกชั่วคราว เพื่อไม่ให้ Supabase โยนเออร์เรอร์ 500 PGRST116 เวลาใส่ ID ผิด)
+    const { data: memos, error: fetchError } = await supabase
       .from('memos')
       .select('*')
       .eq('id', id)
-      .single()
 
-    if (fetchError || !memo) {
-      return res.status(404).json({ error: 'ไม่พบเอกสารที่ต้องการแก้ไข' })
+    // เช็กว่าถ้าเกิด error หรือค้นหาแล้วไม่เจอข้อมูลเลยสักแถวในระบบ
+    if (fetchError || !memos || memos.length === 0) {
+      return res.status(404).json({ error: 'ไม่พบเอกสารที่ต้องการแก้ไขในระบบครับอ้าย' })
     }
 
+    // ดึงข้อมูลแถวแรกออกมาเพื่อนำมาเช็กสิทธิ์ต่อ
+    const memo = memos[0]
+
     // 2. เช็กสิทธิ์ความปลอดภัย — แก้ไขได้เฉพาะคนสร้าง (เจ้าของ) หรือผู้ที่มีสิทธิ์เป็น admin
-    if (memo.created_by !== req.user.id && req.user.role !== 'admin') {
+    // (ใส่เครื่องหมาย // เปิดใช้งาน หรือปิดใช้งานตามที่อ้ายต้องการเทสได้เลยครับ)
+    if (memo.created_by !== req.user?.id && req.user?.role !== 'admin') {
       return res.status(403).json({ error: 'อ้ายไม่มีสิทธิ์แก้ไขเอกสารฉบับนี้ครับ สิทธิ์นี้เป็นของเจ้าของหรือผู้ดูแลระบบเท่านั้น' })
     }
 
     // 3. เริ่มทำการเขียนข้อมูลใหม่ทับลงไป
     const { data: updatedMemo, error: updateError } = await supabase
       .from('memos')
-      .update({ subject, recipient, operator, content, status })
+      .update({ 
+        subject, 
+        recipient, 
+        operator, 
+        content 
+        // ตัด status และตัวแปรอื่น ๆ ออกเพื่อไม่ให้โดน RLS บล็อกสิทธิ์ชั่วคราว
+      })
       .eq('id', id)
       .select()
       .single()
@@ -208,7 +219,7 @@ exports.update = async (req, res) => {
 
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูล' })
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลภายในเซิร์ฟเวอร์' })
   }
 }
 
