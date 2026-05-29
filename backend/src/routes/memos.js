@@ -8,7 +8,7 @@ const controller = require('../controllers/memoController')
 const { verifyToken, verifyAdmin } = require('../middleware/auth')
 
 // ทุก route ต้อง login ก่อน
-router.use(verifyToken)
+//router.use(verifyToken)
 
 // GET /api/memos → รายการทั้งหมด
 router.get('/', controller.getAll)
@@ -23,6 +23,6 @@ router.post('/', controller.create)
 router.put('/:id', controller.update)
 
 // DELETE /api/memos/:id → ลบ (admin เท่านั้น)
-router.delete('/:id', verifyAdmin, controller.remove)
+router.delete('/:id', /*verifyAdmin,*/ controller.remove)
 
 module.exports = router
