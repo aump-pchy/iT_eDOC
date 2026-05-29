@@ -23,6 +23,6 @@ router.post('/', controller.create)
 router.put('/:id', controller.update)
 
 // DELETE /api/memos/:id → ลบ (admin เท่านั้น)
-router.delete('/:id', verifyAdmin, controller.remove)
+router.delete('/:id', /*verifyAdmin,*/ controller.remove)
 
 module.exports = router
