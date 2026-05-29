@@ -7,8 +7,13 @@
     const controller = require('../controllers/userController')
     const { verifyToken, verifyAdmin } = require('../middleware/auth')
 
+<<<<<<< HEAD
     // ทุก route ต้อง login + เป็น admin
     router.use(verifyToken, verifyAdmin)
+=======
+// ทุก route ต้อง login + เป็น admin
+// router.use(verifyToken, verifyAdmin)
+>>>>>>> origin/feature/backend-users
 
     // GET /api/users → รายชื่อผู้ใช้ทั้งหมด
     router.get('/', controller.getAll)
