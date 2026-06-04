@@ -26,7 +26,11 @@
         </div>
       </div>
 
-      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-h-[300px]">
+      <div v-if="loading" class="text-center py-20 text-slate-500">
+        กำลังโหลดข้อมูลจากฐานข้อมูล...
+      </div>
+
+      <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-h-[300px]">
         <div class="overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
@@ -40,17 +44,17 @@
             <tbody class="divide-y divide-slate-100 text-slate-700">
               <tr v-for="memo in filteredMemos" :key="memo.id" class="hover:bg-slate-50/70 transition-colors">
                 <td class="py-4 px-6 text-center font-bold text-blue-600 bg-blue-50/30 whitespace-nowrap">
-                  {{ memo.docNumber }}
+                  {{ memo.memo_number }}
                 </td>
                 <td class="py-4 px-6 font-medium text-slate-800">
-                  {{ memo.title }}
+                  {{ memo.subject }}
                 </td>
                 <td class="py-4 px-6 text-slate-500 whitespace-nowrap">
                   <div class="flex items-center gap-2">
                     <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
-                      {{ memo.author ? memo.author.charAt(0) : '' }}
+                      {{ memo.operator ? memo.operator.charAt(0) : 'U' }}
                     </div>
-                    <span>{{ memo.author }}</span>
+                    <span>{{ memo.operator }}</span>
                   </div>
                 </td>
                 <td class="py-4 px-6 whitespace-nowrap">
@@ -100,35 +104,52 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useMemoStore } from '@/stores/memo'
 
+const store = useMemoStore()
+const router = useRouter()
 const searchQuery = ref('')
 
-const memos = ref([
-  { id: 1, docNumber: '001/2569', title: 'ขออนุมัติจัดซื้อวัสดุสำนักงานประจำไตรมาสที่ 1', author: 'สมชาย สายลุย' },
-  { id: 2, docNumber: '002/2569', title: 'แจ้งกำหนดการนัดหมายอบรมการใช้งานระบบ iT_eDOC', author: 'สมหญิง รักเรียน' },
-  { id: 3, docNumber: '003/2569', title: 'ขอส่งรายงานผลการซ่อมบำรุงเครื่องแม่ข่าย (Server)', author: 'สมศักดิ์ ช่างคอม' },
-  { id: 4, docNumber: '004/2569', title: 'โครงการปรับปรุงระบบเครือข่ายภายในองค์กรประจำปี 2026', author: 'แอดมิน ไอที' }
-])
+// ดึงตัวแปรคอมพิวเต็ดดึงข้อมูลอาเรย์และสถานะการโหลดตามคำสั่งครู
+const memos = computed(() => store.memos)
+const loading = computed(() => store.loading)
 
+// โดดรันโหลดข้อมูลบันทึกข้อความทั้งหมดจากหลังบ้านตอนเปิดหน้าจอทันที
+onMounted(() => {
+  store.fetchMemos()
+})
+
+// ปรับส่วนค้นหาโครงสร้างเดิม ให้เสิร์ชหาจากคำสั่งฟิลด์จริงของฐานข้อมูล
 const filteredMemos = computed(() => {
+  const currentMemos = memos.value || []
   if (!searchQuery.value.trim()) {
-    return memos.value
+    return currentMemos
   }
   const query = searchQuery.value.toLowerCase()
-  return memos.value.filter(memo => 
-    memo.docNumber.toLowerCase().includes(query) || 
-    memo.title.toLowerCase().includes(query)
+  return currentMemos.filter(memo => 
+    (memo.memo_number && memo.memo_number.toLowerCase().includes(query)) || 
+    (memo.subject && memo.subject.toLowerCase().includes(query))
   )
 })
 
+// ฟังก์ชันกดแก้ไข: โยนไอดีเข้าฟอร์มเดี่ยวของคนที่ 3 แต่อิงตามรูปแบบกลุ่มอ้าย
 const editMemo = (memo) => {
-  alert(`กำลังเปิดหน้าแก้ไข: ${memo.title}`)
+  // ดีดวาร์ปไปหน้าฟอร์มในโหมดแก้ไขตามเราเตอร์กลุ่ม
+  router.push(`/memos/${memo.id}/edit`)
 }
 
-const deleteMemo = (id) => {
+// ฟังก์ชันกดลบ: ยิงทำลายข้อมูลผ่าน Store ตัวจริง
+const deleteMemo = async (id) => {
   if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการบันทึกนี้?')) {
-    memos.value = memos.value.filter(memo => memo.id !== id)
+    try {
+      await store.deleteMemo(id)
+      alert('🗑️ ลบข้อมูลบันทึกข้อความสำเร็จแล้วครับอ้าย!')
+      await store.fetchMemos() // รีโหลดข้อมูลตารางให้เป็นปัจจุบัน
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการลบข้อมูล')
+    }
   }
 }
 </script>
