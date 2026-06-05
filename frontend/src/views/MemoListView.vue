@@ -89,7 +89,7 @@
               <tr v-if="filteredMemos.length === 0">
                 <td colspan="4" class="py-20 text-center text-slate-400 bg-slate-50/20">
                   <div class="flex flex-col items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/xl" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-slate-300">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.008 1.24l.885 1.77a2.25 2.25 0 0 0 2.007 1.24h1.98a2.25 2.25 0 0 0 2.007-1.24l.885-1.77a2.25 2.25 0 0 1 2.007-1.24h3.86m-18 0h18a2.25 2.25 0 0 0 2.25-2.25V5.25A2.25 2.25 0 0 0 17.625 3h-11.25A2.25 2.25 0 0 0 4.125 5.25v6a2.25 2.25 0 0 0 2.25 2.25Z" />
                     </svg>
                     <span>ไม่พบข้อมูลบันทึกข้อความในระบบ</span>
