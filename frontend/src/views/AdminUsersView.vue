@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-6 md:pt-20 ">
+  <div class="min-h-screen bg-gray-50 py-8 px-6 md:pt-20">
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
 
       <div class="mb-10">
@@ -19,8 +19,7 @@
             type="text"
             v-model="form.name"
             placeholder="กรอกชื่อ"
-            class="flex-1 border border-gray-300 rounded-xl p-2
-                   bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
           />
         </div>
 
@@ -33,8 +32,7 @@
             type="text"
             v-model="form.position"
             placeholder="กรอกตำแหน่ง"
-            class="flex-1 border border-gray-300 rounded-xl p-2
-                   bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
           />
         </div>
 
@@ -47,8 +45,7 @@
             type="email"
             v-model="form.email"
             placeholder="example@email.com"
-            class="flex-1 border border-gray-300 rounded-xl p-2
-                   bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
           />
         </div>
 
@@ -61,8 +58,7 @@
             type="password"
             v-model="form.password"
             placeholder="********"
-            class="flex-1 border border-gray-300 rounded-xl p-2
-                   bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
           />
         </div>
 
@@ -73,8 +69,7 @@
 
           <select
             v-model="form.role"
-            class="flex-1 border border-gray-300 rounded-xl p-2
-                   bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm cursor-pointer"
           >
             <option value="" disabled selected>เลือกสิทธิการใช้งาน</option>
             <option value="Admin">Admin</option>
@@ -94,7 +89,7 @@
           <button
             @click="submitForm"
             :class="isEditing ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-900'"
-            class="text-white p-2 px-6 rounded-xl transition"
+            class="text-white p-2 px-6 rounded-xl transition font-bold"
           >
             {{ isEditing ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล' }}
           </button>
@@ -103,7 +98,6 @@
       </div>
 
       <div class="mt-14">
-
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 pb-2 border-b border-gray-100">
           <div class="flex items-center gap-4 w-full sm:w-auto flex-1">
             <h2 class="text-xl font-semibold text-gray-800 whitespace-nowrap">
@@ -130,18 +124,12 @@
           ไม่พบข้อมูลผู้ใช้งานที่ตรงตามเงื่อนไข
         </div>
 
-        <div
-          v-else
-          class="space-y-4"
-        >
+        <div v-else class="space-y-4">
           <div
             v-for="user in filteredUsers"
             :key="user.id"
-            class="flex items-center justify-between
-                   bg-gray-50 border border-gray-200
-                   rounded-2xl p-5 hover:bg-gray-100 transition"
+            class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl p-5 hover:bg-gray-100 transition"
           >
-
             <div class="space-y-1">
               <div class="flex items-center gap-3">
                 <h3 class="font-medium text-gray-800">
@@ -178,7 +166,6 @@
                 ลบ
               </button>
             </div>
-
           </div>
         </div>
 
@@ -188,9 +175,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 
-// โครงสร้างฟอร์ม
 const form = ref({
   name: "",
   position: "",
@@ -199,23 +185,16 @@ const form = ref({
   role: "",
 });
 
-// กำหนดอาร์เรย์เป็นค่าว่างไว้ก่อน เพื่อรอโหลดจากเบราว์เซอร์
 const users = ref([]);
-
-// ตัวแปรค้นหา
 const searchQuery = ref("");
-
-// State ควบคุมโหมดแก้ไข
 const isEditing = ref(false);
 const editId = ref(null);
 
-// ดึงข้อมูลจาก localStorage มาแสดงเมื่อคอมโพเนนต์ถูกโหลดขึ้นหน้าเว็บ (onMounted)
 onMounted(() => {
   const savedUsers = localStorage.getItem("saved_users");
   if (savedUsers) {
     users.value = JSON.parse(savedUsers);
   } else {
-    // ถ้าเปิดเว็บครั้งแรกและไม่มีข้อมูล ให้ใส่ Mock Data ตัวเริ่มต้นไว้ให้ครับ
     users.value = [
       {
         id: 1,
@@ -234,17 +213,14 @@ onMounted(() => {
         role: "ผู้ใช้ทั่วไป"
       }
     ];
-    // เซฟลงเบราว์เซอร์ทันที
     saveToStorage();
   }
 });
 
-// ฟังก์ชันสำหรับบันทึกข้อมูลปัจจุบันลงใน localStorage
 const saveToStorage = () => {
   localStorage.setItem("saved_users", JSON.stringify(users.value));
 };
 
-// ตัวกรองสืบค้น Real-time
 const filteredUsers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
   if (!query) return users.value;
@@ -258,7 +234,6 @@ const filteredUsers = computed(() => {
   });
 });
 
-// เคลียร์ค่าฟอร์ม
 const resetForm = () => {
   form.value = {
     name: "",
@@ -271,7 +246,6 @@ const resetForm = () => {
   editId.value = null;
 };
 
-// บันทึกข้อมูล
 const submitForm = () => {
   if (
     !form.value.name ||
@@ -307,12 +281,10 @@ const submitForm = () => {
     });
   }
 
-  // เรียกฟังก์ชันเซฟข้อมูลเมื่อบันทึกเสร็จ
   saveToStorage();
   resetForm();
 };
 
-// คลิกแก้ไขดึงข้อมูลขึ้นฟอร์ม
 const editUser = (user) => {
   isEditing.value = true;
   editId.value = user.id;
@@ -330,17 +302,13 @@ const cancelEdit = () => {
   resetForm();
 };
 
-// ลบรายชื่อ
 const deleteUser = (user) => {
   const isConfirmed = confirm(`คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`);
-  
   if (isConfirmed) {
     if (isEditing.value && editId.value === user.id) {
       resetForm();
     }
     users.value = users.value.filter(u => u.id !== user.id);
-    
-    // เรียกฟังก์ชันเซฟข้อมูลเมื่อทำการลบเสร็จ
     saveToStorage();
   }
 };

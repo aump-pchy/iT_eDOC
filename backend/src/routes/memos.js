@@ -8,7 +8,7 @@ const controller = require('../controllers/memoController')
 const { verifyToken, verifyAdmin } = require('../middleware/auth')
 
 // ทุก route ต้อง login ก่อน
-//router.use(verifyToken)
+router.use(verifyToken)
 
 // GET /api/memos → รายการทั้งหมด
 router.get('/', controller.getAll)
