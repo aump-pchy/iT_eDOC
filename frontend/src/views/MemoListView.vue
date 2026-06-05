@@ -26,13 +26,15 @@
         </div>
       </div>
 
-      <div v-if="loading" class="text-center py-20 text-slate-500">
-        กำลังโหลดข้อมูลจากฐานข้อมูล...
-      </div>
-
-      <div v-else class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-h-[300px]">
+      <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm min-h-[300px]">
         <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
+          
+          <div v-if="loading" class="text-center py-24 text-slate-400 font-medium flex flex-col items-center gap-3">
+            <div class="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+            <p>กำลังโหลดข้อมูลบันทึกข้อความจากฐานข้อมูล...</p>
+          </div>
+
+          <table v-else class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold">
                 <th class="py-4 px-6 w-32 text-center">เลขที่หนังสือ</th>
@@ -54,7 +56,7 @@
                     <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
                       {{ memo.operator ? memo.operator.charAt(0) : 'U' }}
                     </div>
-                    <span>{{ memo.operator }}</span>
+                    <span>{{ memo.operator || 'ไม่ระบุชื่อ' }}</span>
                   </div>
                 </td>
                 <td class="py-4 px-6 whitespace-nowrap">
@@ -67,16 +69,16 @@
                       รายละเอียด
                     </router-link>
 
-                    <button 
-                      @click="editMemo(memo)"
+                    <router-link
+                      :to="`/memos/${memo.id}/edit`"
                       class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
                     >
                       แก้ไข
-                    </button>
+                    </router-link>
 
                     <button 
                       @click="deleteMemo(memo.id)"
-                      class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                      class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
                     >
                       ลบ
                     </button>
@@ -87,10 +89,10 @@
               <tr v-if="filteredMemos.length === 0">
                 <td colspan="4" class="py-20 text-center text-slate-400 bg-slate-50/20">
                   <div class="flex flex-col items-center justify-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-slate-300">
+                    <svg xmlns="http://www.w3.org/2000/xl" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-slate-300">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 13.5h3.86a2.25 2.25 0 0 1 2.008 1.24l.885 1.77a2.25 2.25 0 0 0 2.007 1.24h1.98a2.25 2.25 0 0 0 2.007-1.24l.885-1.77a2.25 2.25 0 0 1 2.007-1.24h3.86m-18 0h18a2.25 2.25 0 0 0 2.25-2.25V5.25A2.25 2.25 0 0 0 17.625 3h-11.25A2.25 2.25 0 0 0 4.125 5.25v6a2.25 2.25 0 0 0 2.25 2.25Z" />
                     </svg>
-                    <span>ไม่มีข้อมูลบันทึกข้อความในระบบ</span>
+                    <span>ไม่พบข้อมูลบันทึกข้อความในระบบ</span>
                   </div>
                 </td>
               </tr>
@@ -105,23 +107,19 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useMemoStore } from '@/stores/memo'
 
 const store = useMemoStore()
-const router = useRouter()
 const searchQuery = ref('')
 
-// ดึงตัวแปรคอมพิวเต็ดดึงข้อมูลอาเรย์และสถานะการโหลดตามคำสั่งครู
+// ✨ ดึงข้อมูลอาร์เรย์ตัวแปรต้นตรงจากเซฟ Pinia
 const memos = computed(() => store.memos)
 const loading = computed(() => store.loading)
 
-// โดดรันโหลดข้อมูลบันทึกข้อความทั้งหมดจากหลังบ้านตอนเปิดหน้าจอทันที
 onMounted(() => {
   store.fetchMemos()
 })
 
-// ปรับส่วนค้นหาโครงสร้างเดิม ให้เสิร์ชหาจากคำสั่งฟิลด์จริงของฐานข้อมูล
 const filteredMemos = computed(() => {
   const currentMemos = memos.value || []
   if (!searchQuery.value.trim()) {
@@ -134,19 +132,12 @@ const filteredMemos = computed(() => {
   )
 })
 
-// ฟังก์ชันกดแก้ไข: โยนไอดีเข้าฟอร์มเดี่ยวของคนที่ 3 แต่อิงตามรูปแบบกลุ่มอ้าย
-const editMemo = (memo) => {
-  // ดีดวาร์ปไปหน้าฟอร์มในโหมดแก้ไขตามเราเตอร์กลุ่ม
-  router.push(`/memos/${memo.id}/edit`)
-}
-
-// ฟังก์ชันกดลบ: ยิงทำลายข้อมูลผ่าน Store ตัวจริง
 const deleteMemo = async (id) => {
   if (confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการบันทึกนี้?')) {
     try {
       await store.deleteMemo(id)
       alert('🗑️ ลบข้อมูลบันทึกข้อความสำเร็จแล้วครับอ้าย!')
-      await store.fetchMemos() // รีโหลดข้อมูลตารางให้เป็นปัจจุบัน
+      await store.fetchMemos()
     } catch (err) {
       alert('เกิดข้อผิดพลาดในการลบข้อมูล')
     }

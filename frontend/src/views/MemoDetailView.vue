@@ -107,7 +107,7 @@
           <button 
             type="button" 
             @click="router.push('/memos')"
-            class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center space-x-2"
+            class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center space-x-2 cursor-pointer"
           >
             <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -118,19 +118,19 @@
           <div class="flex flex-wrap gap-2 justify-end">
             <button 
               @click="changeStatus('rejected')"
-              class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-semibold text-sm transition-colors"
+              class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-semibold text-sm transition-colors cursor-pointer"
             >
               ❌ ปฏิเสธ
             </button>
             <button 
               @click="changeStatus('approved')"
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm shadow-sm transition-colors"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm shadow-sm transition-colors cursor-pointer"
             >
               ✅ อนุมัติ
             </button>
             
             <router-link 
-              :to="`/memos/${memo.id}/edit`"
+              :to="`/memos/${memo?.id}/edit`"
               class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm shadow-sm transition-colors flex items-center justify-center"
             >
               📝 แก้ไขข้อมูล
@@ -141,9 +141,9 @@
       </div>
     </div>
 
-    <div v-else class="text-center py-20 text-gray-500 font-medium">
-      <div class="animate-spin inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-      <p>กำลังดึงรายละเอียดข้อมูลเอกสารจากฐานข้อมูล...</p>
+    <div v-else class="text-center py-40 text-gray-500 font-medium w-full flex flex-col items-center justify-center gap-2">
+      <div class="animate-spin inline-block w-9 h-9 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
+      <p class="text-slate-600 font-bold">กำลังดึงรายละเอียดข้อมูลเอกสารจากฐานข้อมูลวิทยาลัย...</p>
     </div>
   </div>
 </template>
@@ -161,8 +161,12 @@ const router = useRouter()
 const memo = computed(() => store.current)
 
 // เมื่อเปิดหน้านี้ขึ้นมา ให้ไปดึงข้อมูลเดี่ยวตามไอดีบน URL ทันที
-onMounted(() => {
-  store.fetchMemo(route.params.id)
+onMounted(async () => {
+  try {
+    await store.fetchMemo(route.params.id)
+  } catch (error) {
+    console.error('Failed to fetch memo:', error)
+  }
 })
 
 // ฟังก์ชันเปลี่ยนสถานะ เมื่อกดปุ่มจะอัปเดตขึ้นคลาวด์และรีโหลดสเตตัสใหม่

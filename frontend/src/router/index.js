@@ -21,7 +21,6 @@ const router = createRouter({
       component: () => import('../views/MemoFormView.vue'),
     },
     {
-      // 🛠️ แก้ไขตรงนี้ให้ตรงกับที่ปุ่มใน MemoListView.vue ของอ้ายกดส่งมา (เปลี่ยนจาก /memos/:id เป็น /memo-detail/:id)
       path: '/memo-detail/:id',
       name: 'memo-detail',
       component: () => import('../views/MemoDetailView.vue'),
@@ -42,6 +41,11 @@ const router = createRouter({
       name: 'admin-users',
       component: () => import('../views/AdminUsersView.vue'),
     },
+    // ✨ เติมพาร์ทดักจับบั๊กไว้ตรงนี้ครับอ้าย! ถ้าหลุดไปหน้าไม่มีอยู่จริง (เช่น /memos/1) จะดีดกลับหน้าหลักทันที ไม่ปล่อยให้จอขาว
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/memos'
+    }
   ],
 })
 
