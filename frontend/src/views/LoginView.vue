@@ -1,38 +1,47 @@
 <template>
-  <div class="min-h-screen bg-gray-100 flex items-center justify-center">
-    <div class="bg-white p-8 rounded-xl shadow w-full max-w-md">
-      
-      <h1 class="text-2xl font-bold text-gray-800 mb-6">เข้าสู่ระบบ</h1>
+  <div class="min-h-screen flex flex-col items-center justify-center px-4"
+       style="background: linear-gradient(160deg, #6d0d30 0%, #a0163f 30%, #d45080 60%, #f5e0ea 85%, #fff 100%);">
 
-      <p class="text-sm text-gray-500 mb-4">
-        พิมพ์อยู่: {{ email }}
-      </p>
+    <!-- Logo -->
+    <div class="mb-3">
+      <img src="/logo.png" alt="IT Loei" class="w-24 h-24 object-contain drop-shadow-lg" />
+    </div>
 
-      <input
-        v-model="email"
-        type="email"
-        placeholder="อีเมล"
-        class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-3 focus:outline-none focus:border-blue-500"
-      />
+    <!-- ชื่อระบบ -->
+    <h1 class="text-2xl font-semibold text-white mb-1">iT-e-Document</h1>
+    <p class="text-sm font-light mb-8" style="color: rgba(255,255,255,0.6);">
+      ระบบจัดการหนังสือราชการภายในออนไลน์
+    </p>
 
-      <input
-        v-model="password"
-        type="password"
-        placeholder="รหัสผ่าน"
-        class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:outline-none focus:border-blue-500"
-      />
+    <!-- Card -->
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <h2 class="text-base font-semibold text-gray-800 mb-5">เข้าสู่ระบบ</h2>
 
-      <button
-        @click="handleLogin"
-        :disabled="!isValid || loading"
-        :class="isValid && !loading ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'"
-        class="w-full text-white font-medium py-2 rounded-lg transition-colors"
-      >
-        {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
-      </button>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
+          <input v-model="email" type="email"
+            placeholder="your@email.com"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
+          <input v-model="password" type="password"
+            placeholder="••••••••"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+        </div>
 
-      <p v-if="errorMsg" class="text-red-500 text-sm mt-3">{{ errorMsg }}</p>
+        <p v-if="errorMsg" class="text-xs text-red-500">{{ errorMsg }}</p>
 
+        <button
+          @click="handleLogin"
+          :disabled="!isValid || loading"
+          :class="isValid && !loading ? 'opacity-100' : 'opacity-50 cursor-not-allowed'"
+          class="w-full py-2.5 rounded-lg text-sm font-medium text-white transition-opacity"
+          style="background: #a0163f;">
+          {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -60,7 +69,7 @@ async function handleLogin() {
   loading.value = true
   try {
     await auth.login(email.value, password.value)
-    router.push('/memos') // ถ้าผ่านจริง จะวาร์ปไปหน้าดึงรายการบันทึกข้อความทันที
+    router.push('/') // ถ้าผ่านจริง จะวาร์ปไปหน้าดึงรายการบันทึกข้อความทันที
   } catch (err) {
     errorMsg.value = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
   } finally {

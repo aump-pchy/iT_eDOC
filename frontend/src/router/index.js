@@ -34,7 +34,7 @@ const router = createRouter({
       path: '/', 
       name: 'home', 
       component: () => import('../views/HomeView.vue'),
-      meta: { public: true } // เปิดให้หน้าแรกสุดเป็นสาธารณะด้วย เผื่อกรณีไม่ได้ล็อกอิน
+      
     },
     {
       path: '/admin/users',
@@ -44,7 +44,7 @@ const router = createRouter({
     // ✨ เติมพาร์ทดักจับบั๊กไว้ตรงนี้ครับอ้าย! ถ้าหลุดไปหน้าไม่มีอยู่จริง (เช่น /memos/1) จะดีดกลับหน้าหลักทันที ไม่ปล่อยให้จอขาว
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/memos'
+      redirect: '/'
     }
   ],
 })
@@ -61,7 +61,7 @@ router.beforeEach((to, _, next) => {
   
   // 2. ถ้าผู้ใช้ล็อกอินค้างไว้ในระบบอยู่แล้ว แต่อุตริพิมพ์ URL จะกลับมาหน้า login ให้ดันกลับไปหน้าทะเบียนหนังสือ (/memos)
   if (to.name === 'login' && auth.isLoggedIn) {
-    return next('/memos')
+    return next('/')
   }
   
   next() // ปล่อยผ่านไปยังหน้าปลายทางได้ปกติ
