@@ -188,9 +188,18 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
+import { createClient } from "@supabase/supabase-js";
 
-// โครงสร้างฟอร์ม
+// ==========================================
+// 🛠️ สายเชื่อมต่อตรงเข้าคลาวด์ Supabase ของคุณ
+// ==========================================
+const supabaseUrl = "https://blvofgahkeiatjtfqjaz.supabase.co"; 
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsdm9mZ2Foa2VpYXRqdGZxamF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NDk2ODIsImV4cCI6MjA5NTIyNTY4Mn0.yEFvzcALpWgI3K0siiLc0WEodj_c0gTbqOUYbRXOwc8"; 
+const supabase = createClient(supabaseUrl, supabaseKey);
+// ==========================================
+
+// โครงสร้างฟอร์ม (ใช้ชื่อตัวแปรเดิมที่คุณออกแบบไว้เป๊ะๆ)
 const form = ref({
   name: "",
   position: "",
@@ -199,7 +208,7 @@ const form = ref({
   role: "",
 });
 
-// กำหนดอาร์เรย์เป็นค่าว่างไว้ก่อน เพื่อรอโหลดจากเบราว์เซอร์
+// อาร์เรย์สำหรับเก็บรายชื่อผู้ใช้งานเพื่อเอาไปวนลูปแสดงผล
 const users = ref([]);
 
 // ตัวแปรค้นหา
@@ -209,110 +218,121 @@ const searchQuery = ref("");
 const isEditing = ref(false);
 const editId = ref(null);
 
-// ดึงข้อมูลจาก localStorage มาแสดงเมื่อคอมโพเนนต์ถูกโหลดขึ้นหน้าเว็บ (onMounted)
-onMounted(() => {
-  const savedUsers = localStorage.getItem("saved_users");
-  if (savedUsers) {
-    users.value = JSON.parse(savedUsers);
-  } else {
-    // ถ้าเปิดเว็บครั้งแรกและไม่มีข้อมูล ให้ใส่ Mock Data ตัวเริ่มต้นไว้ให้ครับ
-    users.value = [
-      {
-        id: 1,
-        name: "สมชาย ใจดี",
-        position: "Admin",
-        email: "somchai@email.com",
-        password: "password123",
-        role: "Admin"
-      },
-      {
-        id: 2,
-        name: "สมหญิง รักเรียน",
-        position: "Marketing",
-        email: "somying@email.com",
-        password: "password456",
-        role: "ผู้ใช้ทั่วไป"
-      }
-    ];
-    // เซฟลงเบราว์เซอร์ทันที
-    saveToStorage();
+// 📥 ฟังก์ชันดึงข้อมูลจากตาราง profiles (แปลงค่าหลังบ้านให้เข้ากับดีไซน์ฟรอนต์เอนด์)
+const fetchUsers = async () => {
+  try {
+    // แก้จาก "users" เป็น "profiles" เพื่อให้ตรงกับตารางบน Supabase
+    const { data, error } = await supabase
+      .from("profiles") 
+      .select("*");
+
+    if (error) throw error;
+
+    if (data) {
+      // แปลงชื่อคอลัมน์จาก Supabase (full_name, department) 
+      // เข้ามาที่ตัวแปรเดิมของหน้าฟรอนต์เอนด์คุณ (name, position) 
+      users.value = data.map(user => ({
+        id: user.id,               
+        name: user.full_name || "",      
+        position: user.department || "",  
+        email: user.email || "",
+        password: user.password || "",
+        role: user.role || "user"
+      }));
+    } else {
+      users.value = [];
+    }
+
+  } catch (error) {
+    console.error("Error fetching users:", error.message);
+    // เพิ่มบรรทัดนี้เพื่อเช็กหากระบบยังดึงข้อมูลไม่ได้ จะมีหน้าต่าง Alert แจ้งเตือนสาเหตุทันที
+    alert("เกิดปัญหาตอนดึงข้อมูล: " + error.message); 
   }
+};
+// เรียกดึงข้อมูลทันทีเมื่อเปิดหน้าจอ localhost
+onMounted(() => {
+  fetchUsers();
 });
 
-// ฟังก์ชันสำหรับบันทึกข้อมูลปัจจุบันลงใน localStorage
-const saveToStorage = () => {
-  localStorage.setItem("saved_users", JSON.stringify(users.value));
-};
-
-// ตัวกรองสืบค้น Real-time
+// ตัวกรองสืบค้นแบบ Real-time บนหน้าเว็บของคุณ
+// 🔍 หาฟังก์ชัน filteredUsers ของเดิมในโค้ดของคุณ แล้วเปลี่ยนเป็นชุดนี้ครับ:
 const filteredUsers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
+  
+  // ถ้าช่องค้นหาว่างเปล่า ให้ดึงข้อมูลผู้ใช้งานทุกคน (users.value) ออกไปโชว์ทันที
   if (!query) return users.value;
 
+  // ถ้ามีการพิมพ์ค้นหา ให้กรองข้อมูลอย่างปลอดภัย
   return users.value.filter((user) => {
     return (
-      user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      user.role.toLowerCase().includes(query)
+      (user.name && user.name.toLowerCase().includes(query)) ||
+      (user.email && user.email.toLowerCase().includes(query)) ||
+      (user.role && user.role.toLowerCase().includes(query)) ||
+      (user.position && user.position.toLowerCase().includes(query))  
     );
   });
 });
 
-// เคลียร์ค่าฟอร์ม
+// ฟังก์ชันเคลียร์ค่าในช่องฟอร์มให้ว่างเปล่า
 const resetForm = () => {
-  form.value = {
-    name: "",
-    position: "",
-    email: "",
-    password: "",
-    role: "",
-  };
+  form.value = { name: "", position: "", email: "", password: "", role: "" };
   isEditing.value = false;
   editId.value = null;
 };
 
-// บันทึกข้อมูล
-const submitForm = () => {
-  if (
-    !form.value.name ||
-    !form.value.position ||
-    !form.value.email ||
-    !form.value.password ||
-    !form.value.role
-  ) {
+// 💾 ฟังก์ชันกดปุ่มบันทึกข้อมูล (ส่งข้อมูลจากฟอร์มเดิมของคุณแปลงเข้าสู่ตาราง Profiles บนคลาวด์)
+const submitForm = async () => {
+  if (!form.value.name || !form.value.position || !form.value.email || !form.value.role || (!isEditing.value && !form.value.password)) {
     alert("กรุณากรอกข้อมูลให้ครบถ้วน");
     return;
   }
 
-  if (isEditing.value) {
-    const index = users.value.findIndex(u => u.id === editId.value);
-    if (index !== -1) {
-      users.value[index] = {
-        id: editId.value,
-        name: form.value.name,
-        position: form.value.position,
+  try {
+    if (isEditing.value) {
+      // 🔄 จังหวะกดเซฟการ "แก้ไขข้อมูล"
+      const updatedData = {
+        full_name: form.value.name,       // ส่งค่าในฟอร์ม name ไปเซฟลงช่อง full_name ในคลาวด์
+        department: form.value.position,   // ส่งค่าในฟอร์ม position ไปเซฟลงช่อง department ในคลาวด์
         email: form.value.email,
-        password: form.value.password,
         role: form.value.role,
       };
-    }
-  } else {
-    users.value.push({
-      id: Date.now(),
-      name: form.value.name,
-      position: form.value.position,
-      email: form.value.email,
-      password: form.value.password,
-      role: form.value.role,
-    });
-  }
 
-  // เรียกฟังก์ชันเซฟข้อมูลเมื่อบันทึกเสร็จ
-  saveToStorage();
-  resetForm();
+      if (form.value.password) updatedData.password = form.value.password;
+
+      const { error } = await supabase
+        .from("profiles")
+        .update(updatedData)
+        .eq("id", editId.value);
+
+      if (error) throw error;
+      alert("แก้ไขข้อมูลผู้ใช้งานสำเร็จ");
+    } else {
+      // ➕ จังหวะกดเซฟ "เพิ่มผู้ใช้งานใหม่"
+      const { error } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            full_name: form.value.name,       // ส่งไปเก็บที่ช่อง full_name
+            department: form.value.position,   // ส่งไปเก็บที่ช่อง department
+            email: form.value.email,
+            password: form.value.password,
+            role: form.value.role,
+          },
+        ]);
+
+      if (error) throw error;
+      alert("เพิ่มผู้ใช้งานเข้าฐานข้อมูลสำเร็จ");
+    }
+
+    // โหลดรายชื่ออัปเดตใหม่ และล้างข้อมูลในฟอร์มออก
+    await fetchUsers();
+    resetForm();
+  } catch (error) {
+    alert("เกิดข้อผิดพลาดในการบันทึก: " + error.message);
+  }
 };
 
-// คลิกแก้ไขดึงข้อมูลขึ้นฟอร์ม
+// จังหวะกดปุ่มแก้ไขเพื่อดึงข้อมูลเก่ากลับขึ้นไปค้างบนฟอร์ม
 const editUser = (user) => {
   isEditing.value = true;
   editId.value = user.id;
@@ -321,7 +341,7 @@ const editUser = (user) => {
     name: user.name,
     position: user.position,
     email: user.email,
-    password: user.password,
+    password: "", // ปล่อยรหัสผ่านว่างไว้ให้กรอกใหม่ถ้าต้องการเปลี่ยน
     role: user.role,
   };
 };
@@ -330,18 +350,22 @@ const cancelEdit = () => {
   resetForm();
 };
 
-// ลบรายชื่อ
-const deleteUser = (user) => {
+// ❌ ฟังก์ชันกดปุ่มลบข้อมูลผู้ใช้งานออกแบบตามไอดี UUID
+const deleteUser = async (user) => {
   const isConfirmed = confirm(`คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`);
-  
   if (isConfirmed) {
-    if (isEditing.value && editId.value === user.id) {
-      resetForm();
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", user.id);
+
+      if (error) throw error;
+      alert("ลบข้อมูลสำเร็จ");
+      await fetchUsers(); // ดึงรายชื่อใหม่หลังหักลบเสร็จ
+    } catch (error) {
+      alert("ลบข้อมูลผิดพลาด: " + error.message);
     }
-    users.value = users.value.filter(u => u.id !== user.id);
-    
-    // เรียกฟังก์ชันเซฟข้อมูลเมื่อทำการลบเสร็จ
-    saveToStorage();
   }
 };
 </script>
