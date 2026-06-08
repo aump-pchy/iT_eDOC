@@ -3,9 +3,9 @@ import { ref } from 'vue'
 import api from '@/api'
 
 export const useMemoStore = defineStore('memo', () => {
-  const memos   = ref([])
-  const current = ref(null)
-  const loading = ref(false)
+  const memos   = ref([])    // เก็บรายการบันทึกข้อความทั้งหมด
+  const current = ref(null)  // เก็บข้อมูลเอกสารชิ้นเดียว (ส่งต่อให้คนที่ 3 และ 4)
+  const loading = ref(false) // สถานะโหลดข้อมูล (เอาไว้ทำ Spinner หมุนรอ)
 
   async function fetchMemos(params = {}) {
     loading.value = true

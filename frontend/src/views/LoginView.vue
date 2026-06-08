@@ -46,12 +46,12 @@ const auth     = useAuthStore()
 const router   = useRouter()
 const email    = ref('')
 const password = ref('')
-const errorMsg = ref('')
+const error    = ref('')
 const loading  = ref(false)
 
 // เปิดระบบล็อกปุ่มถ้ากรอกข้อมูลไม่ครบตามเงื่อนไขครู
 const isValid = computed(() => {
-  return email.value.length > 0 && password.value.length >= 6
+  return email.value.trim() !== '' && password.value.trim() !== ''
 })
 
 // ฟังก์ชันล็อกอินเชื่อม API ของจริง ยิงหาหลังบ้านพอร์ต 3000
