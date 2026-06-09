@@ -144,6 +144,3 @@ const deleteMemo = async (id) => {
   }
 }
 </script>
-
-<style scoped>
-</style>
