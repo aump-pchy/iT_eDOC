@@ -78,7 +78,7 @@
           >
             <option value="" disabled selected>เลือกสิทธิการใช้งาน</option>
             <option value="Admin">Admin</option>
-            <option value="ผู้ใช้ทั่วไป">ผู้ใช้ทั่วไป</option>
+            <option value="user">ผู้ใช้ทั่วไป</option>
           </select>
         </div>
 
