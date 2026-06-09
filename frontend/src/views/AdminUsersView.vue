@@ -189,17 +189,32 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { createClient } from "@supabase/supabase-js";
 
 // ==========================================
-// 🛠️ สายเชื่อมต่อตรงเข้าคลาวด์ Supabase ของคุณ
+// 🛠️ URL ของ Express Backend
 // ==========================================
-const supabaseUrl = "https://blvofgahkeiatjtfqjaz.supabase.co"; 
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsdm9mZ2Foa2VpYXRqdGZxamF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NDk2ODIsImV4cCI6MjA5NTIyNTY4Mn0.yEFvzcALpWgI3K0siiLc0WEodj_c0gTbqOUYbRXOwc8"; 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const API_URL = "http://localhost:3000/api/users";
+
+// ดึง token จาก localStorage (เซฟไว้ตอน login)
+const getToken = () => localStorage.getItem("token");
+
+// helper สำหรับ fetch พร้อม Authorization header
+const apiFetch = async (url, options = {}) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...options.headers,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
+  return data;
+};
+
 // ==========================================
 
-// โครงสร้างฟอร์ม (ใช้ชื่อตัวแปรเดิมที่คุณออกแบบไว้เป๊ะๆ)
 const form = ref({
   name: "",
   position: "",
@@ -208,163 +223,129 @@ const form = ref({
   role: "",
 });
 
-// อาร์เรย์สำหรับเก็บรายชื่อผู้ใช้งานเพื่อเอาไปวนลูปแสดงผล
 const users = ref([]);
-
-// ตัวแปรค้นหา
 const searchQuery = ref("");
-
-// State ควบคุมโหมดแก้ไข
 const isEditing = ref(false);
 const editId = ref(null);
 
-// 📥 ฟังก์ชันดึงข้อมูลจากตาราง profiles (แปลงค่าหลังบ้านให้เข้ากับดีไซน์ฟรอนต์เอนด์)
+// 📥 ดึงรายชื่อผู้ใช้งานจาก GET /api/users
 const fetchUsers = async () => {
   try {
-    // แก้จาก "users" เป็น "profiles" เพื่อให้ตรงกับตารางบน Supabase
-    const { data, error } = await supabase
-      .from("profiles") 
-      .select("*");
-
-    if (error) throw error;
-
-    if (data) {
-      // แปลงชื่อคอลัมน์จาก Supabase (full_name, department) 
-      // เข้ามาที่ตัวแปรเดิมของหน้าฟรอนต์เอนด์คุณ (name, position) 
-      users.value = data.map(user => ({
-        id: user.id,               
-        name: user.full_name || "",      
-        position: user.department || "",  
-        email: user.email || "",
-        password: user.password || "",
-        role: user.role || "user"
-      }));
-    } else {
-      users.value = [];
-    }
-
-  } catch (error) {
-    console.error("Error fetching users:", error.message);
-    // เพิ่มบรรทัดนี้เพื่อเช็กหากระบบยังดึงข้อมูลไม่ได้ จะมีหน้าต่าง Alert แจ้งเตือนสาเหตุทันที
-    alert("เกิดปัญหาตอนดึงข้อมูล: " + error.message); 
+    const data = await apiFetch(API_URL);
+    // backend ส่งกลับเป็น array โดยตรง
+    users.value = data.map((u) => ({
+      id: u.id,
+      name: u.full_name || "",
+      position: u.department || "",
+      email: u.email || "",
+      role: u.role || "user",
+    }));
+  } catch (err) {
+    console.error("fetchUsers error:", err.message);
+    alert("ดึงข้อมูลไม่สำเร็จ: " + err.message);
   }
 };
-// เรียกดึงข้อมูลทันทีเมื่อเปิดหน้าจอ localhost
+
 onMounted(() => {
   fetchUsers();
 });
 
-// ตัวกรองสืบค้นแบบ Real-time บนหน้าเว็บของคุณ
-// 🔍 หาฟังก์ชัน filteredUsers ของเดิมในโค้ดของคุณ แล้วเปลี่ยนเป็นชุดนี้ครับ:
+// 🔍 ค้นหา Real-time
 const filteredUsers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
-  
-  // ถ้าช่องค้นหาว่างเปล่า ให้ดึงข้อมูลผู้ใช้งานทุกคน (users.value) ออกไปโชว์ทันที
   if (!query) return users.value;
-
-  // ถ้ามีการพิมพ์ค้นหา ให้กรองข้อมูลอย่างปลอดภัย
-  return users.value.filter((user) => {
-    return (
-      (user.name && user.name.toLowerCase().includes(query)) ||
-      (user.email && user.email.toLowerCase().includes(query)) ||
-      (user.role && user.role.toLowerCase().includes(query)) ||
-      (user.position && user.position.toLowerCase().includes(query))  
-    );
-  });
+  return users.value.filter(
+    (u) =>
+      (u.name && u.name.toLowerCase().includes(query)) ||
+      (u.email && u.email.toLowerCase().includes(query)) ||
+      (u.role && u.role.toLowerCase().includes(query)) ||
+      (u.position && u.position.toLowerCase().includes(query))
+  );
 });
 
-// ฟังก์ชันเคลียร์ค่าในช่องฟอร์มให้ว่างเปล่า
 const resetForm = () => {
   form.value = { name: "", position: "", email: "", password: "", role: "" };
   isEditing.value = false;
   editId.value = null;
 };
 
-// 💾 ฟังก์ชันกดปุ่มบันทึกข้อมูล (ส่งข้อมูลจากฟอร์มเดิมของคุณแปลงเข้าสู่ตาราง Profiles บนคลาวด์)
+// 💾 บันทึก / แก้ไข
 const submitForm = async () => {
-  if (!form.value.name || !form.value.position || !form.value.email || !form.value.role || (!isEditing.value && !form.value.password)) {
+  if (
+    !form.value.name ||
+    !form.value.position ||
+    !form.value.email ||
+    !form.value.role ||
+    (!isEditing.value && !form.value.password)
+  ) {
     alert("กรุณากรอกข้อมูลให้ครบถ้วน");
     return;
   }
 
   try {
     if (isEditing.value) {
-      // 🔄 จังหวะกดเซฟการ "แก้ไขข้อมูล"
-      const updatedData = {
-        full_name: form.value.name,       // ส่งค่าในฟอร์ม name ไปเซฟลงช่อง full_name ในคลาวด์
-        department: form.value.position,   // ส่งค่าในฟอร์ม position ไปเซฟลงช่อง department ในคลาวด์
-        email: form.value.email,
+      // PUT /api/users/:id
+      const body = {
+        full_name: form.value.name,
+        department: form.value.position,
         role: form.value.role,
       };
+      if (form.value.password) body.password = form.value.password;
 
-      if (form.value.password) updatedData.password = form.value.password;
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(updatedData)
-        .eq("id", editId.value);
-
-      if (error) throw error;
+      await apiFetch(`${API_URL}/${editId.value}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
       alert("แก้ไขข้อมูลผู้ใช้งานสำเร็จ");
     } else {
-      // ➕ จังหวะกดเซฟ "เพิ่มผู้ใช้งานใหม่"
-      const { error } = await supabase
-        .from("profiles")
-        .insert([
-          {
-            full_name: form.value.name,       // ส่งไปเก็บที่ช่อง full_name
-            department: form.value.position,   // ส่งไปเก็บที่ช่อง department
-            email: form.value.email,
-            password: form.value.password,
-            role: form.value.role,
-          },
-        ]);
-
-      if (error) throw error;
+      // POST /api/users
+      await apiFetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          full_name: form.value.name,
+          department: form.value.position,
+          email: form.value.email,
+          password: form.value.password,
+          role: form.value.role,
+        }),
+      });
       alert("เพิ่มผู้ใช้งานเข้าฐานข้อมูลสำเร็จ");
     }
 
-    // โหลดรายชื่ออัปเดตใหม่ และล้างข้อมูลในฟอร์มออก
     await fetchUsers();
     resetForm();
-  } catch (error) {
-    alert("เกิดข้อผิดพลาดในการบันทึก: " + error.message);
+  } catch (err) {
+    alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
   }
 };
 
-// จังหวะกดปุ่มแก้ไขเพื่อดึงข้อมูลเก่ากลับขึ้นไปค้างบนฟอร์ม
+// ✏️ โหลดข้อมูลขึ้นฟอร์มเพื่อแก้ไข
 const editUser = (user) => {
   isEditing.value = true;
   editId.value = user.id;
-
   form.value = {
     name: user.name,
     position: user.position,
     email: user.email,
-    password: "", // ปล่อยรหัสผ่านว่างไว้ให้กรอกใหม่ถ้าต้องการเปลี่ยน
+    password: "",
     role: user.role,
   };
 };
 
-const cancelEdit = () => {
-  resetForm();
-};
+const cancelEdit = () => resetForm();
 
-// ❌ ฟังก์ชันกดปุ่มลบข้อมูลผู้ใช้งานออกแบบตามไอดี UUID
+// ❌ ลบผู้ใช้งาน DELETE /api/users/:id
 const deleteUser = async (user) => {
-  const isConfirmed = confirm(`คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`);
+  const isConfirmed = confirm(
+    `คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`
+  );
   if (isConfirmed) {
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", user.id);
-
-      if (error) throw error;
+      await apiFetch(`${API_URL}/${user.id}`, { method: "DELETE" });
       alert("ลบข้อมูลสำเร็จ");
-      await fetchUsers(); // ดึงรายชื่อใหม่หลังหักลบเสร็จ
-    } catch (error) {
-      alert("ลบข้อมูลผิดพลาด: " + error.message);
+      await fetchUsers();
+    } catch (err) {
+      alert("ลบข้อมูลผิดพลาด: " + err.message);
     }
   }
 };
