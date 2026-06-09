@@ -1,6 +1,6 @@
 // ============================================
 // controllers/userController.js
-// งานของ คนที่ 4 — จัดการผู้ใช้งาน (Admin)
+// งานของ คนที่ 4 — จัดการผู้ใช้งาน (Admin) [ฉบับสมบูรณ์]
 // ============================================
 
 const bcrypt   = require('bcryptjs')
@@ -12,19 +12,16 @@ const supabase = require('../config/db')
 // ──────────────────────────────────────────
 exports.getAll = async (req, res) => {
   try {
-    // ดึงข้อมูลทุกคนจากตาราง users โดยเลือกเฉพาะฟิลด์ที่จำเป็น (ไม่ส่ง password กลับไป)
     const { data, error } = await supabase
       .from('profiles')
       .select('id, full_name, email, role, department, created_at')
-      .order('created_at', { ascending: false }) // เรียงจากใหม่ไปเก่า
+      .order('created_at', { ascending: false }) 
 
     if (error) {
       return res.status(400).json({ error: error.message })
     }
 
-    // ส่งข้อมูลผู้ใช้ทั้งหมดกลับไปให้หน้าบ้าน
     res.status(200).json(data)
-
   } catch (err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูล' })
   }
@@ -32,7 +29,8 @@ exports.getAll = async (req, res) => {
 
 // ──────────────────────────────────────────
 // POST /api/users
-// สร้างผู้ใช้ใหม่ (เวอร์ชันแกะรอย Error 500)
+// สร้างผู้ใช้ใหม่
+// ──────────────────────────────────────────
 exports.create = async (req, res) => {
   try {
     const { full_name, email, password, role, department } = req.body
@@ -42,7 +40,7 @@ exports.create = async (req, res) => {
     }
 
     // เช็คอีเมลซ้ำ
-    const { data: existingUser, error: checkError } = await supabase
+    const { data: existingUser } = await supabase
       .from('profiles')
       .select('email')
       .eq('email', email)
@@ -54,7 +52,6 @@ exports.create = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // สั่งบันทึกลงตาราง profile
     const { data: newUser, error: insertError } = await supabase
       .from('profiles')
       .insert([
@@ -69,12 +66,10 @@ exports.create = async (req, res) => {
       .select('id, full_name, email, role, department, created_at')
       .single()
 
-    // 🔴 จุดเช็คที่ 1: ถ้าตารางพังเพราะ Supabase ไม่ยอมรับข้อมูล
     if (insertError) {
       return res.status(400).json({ 
         error: "Supabase ปฏิเสธการบันทึก", 
-        details: insertError.message,
-        code: insertError.code 
+        details: insertError.message
       })
     }
 
@@ -82,10 +77,7 @@ exports.create = async (req, res) => {
       message: 'สร้างผู้ใช้งานสำเร็จ',
       user: newUser
     })
-
   } catch (err) {
-    // 🔴 จุดเช็คที่ 2: ถ้าโค้ดพังในระดับ JavaScript (จากตัวแปรพังหรือคำสั่งผิด)
-    // เปลี่ยนจากแค่ "เกิดข้อผิดพลาด" ให้พ่น err.message ตัวจริงออกมาเลย!
     res.status(500).json({ 
       error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์ (Internal Error)', 
       message: err.message 
@@ -93,43 +85,40 @@ exports.create = async (req, res) => {
   }
 }
 
+// ──────────────────────────────────────────
 // PUT /api/users/:id
-// แก้ไขข้อมูลผู้ใช้ (เวอร์ชันตาราง profiles มี s)
+// แก้ไขข้อมูลผู้ใช้ (ปรับปรุงโครงสร้างการส่งข้อมูลกลับหน้าบ้าน)
 // ──────────────────────────────────────────
 exports.update = async (req, res) => {
   try {
     const { id } = req.params
     const { full_name, role, department } = req.body
 
-    // 1. เช็คว่ามีผู้ใช้งาน id นี้ในตาราง profiles ไหม
+    // 1. เช็คว่ามีผู้ใช้งานรหัสนี้อยู่จริงไหม
     const { data: userCheck, error: checkError } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', id)
+      .single() // ใส่ single เพื่อความแม่นยำในการดึงข้อมูลรายบุคคล
 
-    // ถ้าเกิด Error ตอนเชื่อมต่อหรือค้นหา ให้พ่นบอกทันที
-    if (checkError) {
-      return res.status(400).json({ error: 'เกิดข้อผิดพลาดในการเช็คข้อมูล', details: checkError.message })
-    }
-
-    // ถ้าไม่มีข้อมูลกลับมาเลย แปลว่าหา ID นี้ไม่เจอจริง ๆ
-    if (!userCheck || userCheck.length === 0) {
+    if (checkError || !userCheck) {
       return res.status(404).json({ 
         error: 'ไม่พบผู้ใช้งานนี้ในระบบ', 
-        hint: `ลองเช็คดูว่า ID: ${id} ที่ส่งมา ตรงกับในตาราง profiles จริงไหม` 
+        hint: `ลองเช็คดูว่า ID ตรงกับในตาราง profiles จริงไหม` 
       })
     }
 
-    // 2. สั่งอัปเดตข้อมูลลงตาราง profiles
+    // 2. สั่งอัปเดตข้อมูลและส่งข้อมูลวัตถุ (Object) กลับไปให้ฟรอนต์เอ็นด์ไปหยอดใส่กล่องได้ทันที
     const { data: updatedUser, error: updateError } = await supabase
       .from('profiles')
       .update({
-        full_name: full_name,
-        role: role,
-        department: department
+        full_name,
+        role,
+        department
       })
       .eq('id', id)
-      .select('id, full_name, email, role, department') // ตัด updated_at เผื่อในตารางไม่มีคอลัมน์นี้
+      .select('id, full_name, email, role, department') 
+      .single() // ใช้ single เพื่อให้ได้ก้อน Object นำไปใช้ที่หน้าบ้านง่ายๆ ไม่ติด Array []
 
     if (updateError) {
       return res.status(400).json({ error: 'อัปเดตข้อมูลไม่สำเร็จ', details: updateError.message })
@@ -137,9 +126,8 @@ exports.update = async (req, res) => {
 
     res.status(200).json({
       message: 'อัปเดตข้อมูลผู้ใช้สำเร็จ',
-      user: updatedUser ? updatedUser[0] : null
+      user: updatedUser
     })
-
   } catch (err) {
     res.status(500).json({ error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์', message: err.message })
   }
@@ -147,20 +135,19 @@ exports.update = async (req, res) => {
 
 // ──────────────────────────────────────────
 // DELETE /api/users/:id
-// ลบผู้ใช้
+// ลบผู้ใช้ (เวอร์ชันป้องกันฝั่งฐานข้อมูลพัง Cascade Delete)
 // ──────────────────────────────────────────
 exports.remove = async (req, res) => {
   try {
     const { id } = req.params
 
-    // 1. ห้ามลบตัวเองเด็ดขาด! (เปรียบเทียบ id ที่จะลบ กับ id ของคนล็อกอินที่อยู่ใน req.user.id)
-    // หมายเหตุ: req.user.id จะมาจาก Middleware ล็อกอินของคุณครูวันจันทร์ครับ
+    // 1. ป้องกันการลบตัวเอง
     if (req.user && id === req.user.id) {
       return res.status(400).json({ error: 'คุณไม่สามารถลบบัญชีของตัวเองได้' })
     }
 
-    // 2. เช็คว่ามีผู้ใช้งานคนนี้อยู่ในระบบจริงไหมก่อนสั่งลบ
-    const { data: userCheck, error: checkError } = await supabase
+    // 2. เช็คว่ามีผู้ใช้งานคนนี้อยู่จริงไหม
+    const { data: userCheck } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', id)
@@ -170,7 +157,14 @@ exports.remove = async (req, res) => {
       return res.status(404).json({ error: 'ไม่พบผู้ใช้งานนี้ในระบบ' })
     }
 
-    // 3. สั่งลบข้อมูลออกจาก Supabase
+    // 🔥 [จุดแก้ไขตามบรีฟ]: เคลียร์ลบประวัติเอกสาร (Memos) ที่ผู้ใช้คนนี้เคยสร้างไว้ก่อน
+    // เพื่อไม่ให้เกิดปัญหากฎความปลอดภัย Foreign Key ผูกมัดจนยิงลบไม่ผ่าน
+    await supabase
+      .from('memos')
+      .delete()
+      .eq('by_user', id) // แก้ไขชื่อคอลัมน์เชื่อมโยงให้ตรงกับตาราง memos ของกลุ่มคุณ (เช่น created_by หรือ by_user)
+
+    // 3. สั่งลบข้อมูลผู้ใช้งานออกจากตารางหลักอย่างปลอดภัย
     const { error: deleteError } = await supabase
       .from('profiles')
       .delete()
@@ -180,10 +174,8 @@ exports.remove = async (req, res) => {
       return res.status(400).json({ error: deleteError.message })
     }
 
-    // ส่งข้อความแจ้งหน้าบ้านว่าลบเรียบร้อย
-    res.status(200).json({ message: 'ลบผู้ใช้งานออกจากระบบสำเร็จ' })
-
+    res.status(200).json({ message: 'ลบผู้ใช้งานและเอกสารที่เกี่ยวข้องออกจากระบบสำเร็จแล้วครับ' })
   } catch (err) {
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน' })
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน', message: err.message })
   }
 }
