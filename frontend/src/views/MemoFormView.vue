@@ -31,11 +31,12 @@
                 <input 
                   v-model="formData.memoSeq"
                   type="text" 
+                  :disabled="loadingSeq"
                   :class="[
-                    'w-32 p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm text-center',
+                    'w-32 p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm text-center disabled:bg-gray-100',
                     errors.memoSeq ? 'border-red-500 focus:border-red-500' : ''
                   ]"
-                  placeholder="เช่น 1"
+                  :placeholder="loadingSeq ? 'กำลังโหลด...' : 'เช่น 56'"
                 />
                 
                 <span class="text-gray-800 font-bold text-base shrink-0">
@@ -131,7 +132,7 @@
         </form>
       </div> 
     </div> 
-  </div> 
+  </div>
 </template>
 
 <script setup>
@@ -148,6 +149,7 @@ const router = useRouter()
 const checking = ref(false)
 const submitting = ref(false)
 const loadingSeq = ref(false)
+const userEmailRaw = ref('') // เก็บตัวแปร Email ดิบเพื่อส่งเซฟหลังบ้าน
 
 // ดึงปี พ.ศ. ปัจจุบัน (ค.ศ. + 543)
 const currentYearTh = computed(() => new Date().getFullYear() + 543)
@@ -157,7 +159,7 @@ const formData = reactive({
   memoSeq: '', 
   subject: '',
   attendTo: 'ผู้อำนวยการวิทยาลัยเทคนิคเลย', 
-  operator: 'กำลังโหลดข้อมูลผู้ดำเนินการ...', // ข้อความเมื่อเริ่มโหลดหน้าจอ
+  operator: 'กำลังโหลดข้อมูลผู้ดำเนินการ...', 
   content: 'บันทึกข้อความภายในสถานศึกษา' 
 })
 
@@ -167,42 +169,35 @@ const errors = reactive({
   attendTo: ''
 })
 
-// 🔥 ฟังก์ชันดึงชื่อ-นามสกุลจริงจากตาราง profiles ดักจับข้อมูลทุกรูปแบบ
+// 🔥 ดึงข้อมูลจาก API เส้น /users ของเพื่อนเพื่อดึงฟิลด์ full_name จากตาราง profiles
 const fetchOperatorProfile = async (email) => {
   try {
-    const response = await api.get('/profiles')
+    // ยิงไปหาเส้นทาง /users ที่ดึงข้อมูลตาราง profiles อยู่แล้ว
+    const response = await api.get('/users')
     
-    // ดักจับข้อมูลเผื่อ API ส่งมาไม่เหมือนกัน (รองรับทั้ง array ตรงๆ หรือห่อใน .data หรือ .data.data)
     let profiles = []
-    if (response.data && response.data.data && Array.isArray(response.data.data)) {
-      profiles = response.data.data
-    } else if (response.data && Array.isArray(response.data)) {
-      profiles = response.data
-    } else if (Array.isArray(response)) {
-      profiles = response
+    if (response && response.data) {
+      profiles = response.data.data || response.data || []
     }
 
-    // ทำการค้นหาแถวที่มีอีเมลตรงกัน (แปลงเป็นตัวพิมพ์เล็กเพื่อไม่ให้พลาดตอนเช็ก)
+    // ค้นหาผู้ใช้งานที่อีเมลตรงกัน
     const matchedUser = profiles.find(p => p.email?.toLowerCase() === email?.toLowerCase())
     
     if (matchedUser && matchedUser.full_name) {
-      formData.operator = matchedUser.full_name // คืนค่าเป็นชื่อ นามสกุลจริงสำเร็จ 🎉
+      formData.operator = matchedUser.full_name // เอาชื่อจริงไปพ่นที่หน้าจอเลยครับอ้าย
     } else {
-      // เซฟตี้สเต็ปที่ 1: ถ้าหาไม่เจอใน profiles ให้ดึงชื่อจาก Store หรือ LocalStorage ที่บันทึกไว้ตอน Login
+      // เคสสำรองเผื่อไม่พบข้อมูลในตาราง
       const storeName = authStore.user?.full_name || 
-                        authStore.user?.user_metadata?.full_name || 
-                        JSON.parse(localStorage.getItem('user'))?.full_name
+                        authStore.user?.user_metadata?.full_name
       formData.operator = storeName || email
     }
   } catch (error) {
-    console.error('ดึงโปรไฟล์ผู้ดำเนินการล้มเหลว:', error)
-    // เซฟตี้สเต็ปที่ 2: หาก API ฝั่ง profiles พัง ให้ถอยกลับมาใช้ชื่อจากระบบล็อกอินหลักทันที หน้าจอจะได้ไม่ค้างตัวหนังสือโหลด
-    const storeName = authStore.user?.full_name || JSON.parse(localStorage.getItem('user'))?.full_name
-    formData.operator = storeName || email
+    console.error('ดึงโปรไฟล์ผู้ดำเนินการจากเส้น /users ล้มเหลว:', error)
+    formData.operator = email // ถ้าพังให้เอา email ขึ้นแทน
   }
 }
 
-// ค้นหาเลขที่เอกสารสูงสุดของปีปัจจุบันบนหน้าเว็บเพื่อ Auto รันลำดับถัดไป
+// 🔄 ฟังก์ชันรันเลขบันทึกข้อความสูงสุดของปีปัจจุบันอัตโนมัติ
 const fetchNextMemoNumber = async () => {
   loadingSeq.value = true
   try {
@@ -225,33 +220,35 @@ const fetchNextMemoNumber = async () => {
           const seq = parseInt(match[1], 10)
           if (seq > maxSeq) maxSeq = seq
         }
-      }ฟ
+      }
     })
 
     formData.memoSeq = (maxSeq + 1).toString()
   } catch (error) {
     console.error('ดึงลำดับเลขล้มเหลว:', error)
-    formData.memoSeq = '1'
+    formData.memoSeq = ''
   } finally {
     loadingSeq.value = false
   }
 }
 
-// รันกระบวนการดึงข้อมูลเมื่อคอมโพเนนต์ถูกติดตั้ง
+// รันกระบวนการเมื่อหน้าจอถูกโหลดขึ้นมา
 onMounted(async () => {
-  // ดึงค่าอีเมลจากระบบล็อกอินหลัก (ตรวจเช็กแบบละเอียดทุกพาร์ท)
   const userStoreEmail = authStore.user?.email
   const userStorageEmail = JSON.parse(localStorage.getItem('user'))?.email
   const currentEmail = userStoreEmail || userStorageEmail || 'admin@loeitech.ac.th'
+  
+  // เซ็ตค่า Email ดิบเก็บไว้ใช้ตอนส่ง Payload ไปหลังบ้าน
+  userEmailRaw.value = currentEmail
 
-  // 1. วิ่งไป Map เอาชื่อ-นามสกุลจริงมาจากตาราง profiles
+  // 1. ดึงข้อมูลผู้ดำเนินการมาใส่ในช่องฟอร์มผ่านเส้น /users
   await fetchOperatorProfile(currentEmail)
 
-  // 2. รันเลขอัตโนมัติ ทส. ล่าสุด
+  // 2. ดึงรันตัวเลขอัตโนมัติ ทส. ล่าสุดทันที
   await fetchNextMemoNumber()
 })
 
-// ฟังก์ชันปุ่ม "ตรวจสอบ" ตรวจสอบฟอร์แมตเต็ม ทส.X/ปีพ.ศ. บน DB
+// ฟังก์ชันปุ่ม "ตรวจสอบ" เพื่อตรวจสอบเลขซ้ำในระบบ
 const handleCheckMemo = async () => {
   if (!formData.memoSeq.trim()) {
     errors.memoSeq = 'กรุณาระบุเลขลำดับ'
@@ -278,7 +275,7 @@ const handleCheckMemo = async () => {
       errors.memoSeq = `❌ ${fullMemoNumber} ถูกใช้งานในระบบไปแล้ว!`
       alert(`⚠️ เลขบันทึกข้อความ ${fullMemoNumber} ซ้ำในระบบ! กรุณาเปลี่ยนตัวเลข`)
     } else {
-      alert(`✅ ${fullMemoNumber} สามารถใช้งานได้!`)
+      alert(`เลขที่บันทึกข้อความสามารถใช้งานได้ค!`)
     }
   } catch (error) {
     console.error(error)
@@ -288,7 +285,7 @@ const handleCheckMemo = async () => {
   }
 }
 
-// ตรวจสอบข้อมูลก่อนเซฟจริง
+// ตรวจสอบความถูกต้องของข้อมูลก่อนส่งเซฟ
 const validateForm = () => {
   let isValid = true
   errors.memoSeq = ''
@@ -311,7 +308,7 @@ const validateForm = () => {
   return isValid
 }
 
-// บันทึกข้อมูลเข้าสโตร์และฐานข้อมูล
+// บันทึกข้อมูลและแนบสิทธิ์ Token ผ่านตัวดักหลังบ้าน
 const handleSubmit = async () => {
   if (!validateForm()) return
 
@@ -319,17 +316,31 @@ const handleSubmit = async () => {
 
   submitting.value = true
   try {
+    const token = authStore.token || JSON.parse(localStorage.getItem('token'))
+
+    // ส่งค่าอีเมลดิบกลับไป เพื่อรักษาโครงสร้างของฐานข้อมูลหลัก
     const payload = {
       memo_number: finalMemoNumber,
       subject: formData.subject.trim(),
       recipient: formData.attendTo.trim(), 
-      operator: formData.operator, 
+      operator: userEmailRaw.value, 
       content: formData.content,
       status: 'draft' 
     }
 
-    await memoStore.createMemo(payload)
-    alert('🎉 บันทึกข้อมูลและจัดเก็บลงระบบเรียบร้อย!')
+    await memoStore.createMemo(payload, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    alert('ยอดเยี่ยม! บันทึกข้อมูลลงฐานข้อมูลผ่าน Store สำเร็จแล้ว!')
+    
+    // เคลียร์ฟอร์ม
+    formData.memoSeq = ''
+    formData.subject = ''
+    
+    // ย้ายหน้ากลับไปที่คลังบันทึกข้อความ
     router.push('/memos')
 
   } catch (error) {
