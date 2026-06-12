@@ -4,8 +4,10 @@
       
       <div class="border-b border-gray-200 pb-4 mb-6 flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Memo Detail</h1>
-          <p class="text-sm text-gray-500">แสดงข้อมูลบันทึกข้อความรายบุคคล</p>
+          <h1 class="text-2xl font-bold text-gray-800">
+            รายละเอียดบันทึกข้อความ เลขที่ ทส {{ memo.document_no || '....' }}/2569
+          </h1>
+          <p class="text-sm text-gray-500">แสดงข้อมูลและจัดการสถานะเอกสารบันทึกข้อความกลุ่ม</p>
         </div>
         <span 
           :class="{
@@ -109,7 +111,7 @@
             @click="router.push('/memos')"
             class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center space-x-2 cursor-pointer"
           >
-            <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>ย้อนกลับ</span>
@@ -182,5 +184,69 @@ async function changeStatus(status) {
 }
 </script>
 
-<style scoped>
-</style>
+const router = useRouter()
+const route = useRoute()
+
+const memo = ref({
+  id: '',
+  document_no: '....',
+  title: '',
+  to_position: '',
+  creator_name: '',
+  created_at: '',
+  status: 'กำลังดำเนินการ', 
+  pdf_url: ''
+})
+
+const formattedThaiDate = computed(() => {
+  if (!memo.value.created_at) return 'ไม่มีข้อมูลวันที่'
+  const date = new Date(memo.value.created_at)
+  return date.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+})
+
+const handlePdfUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  try {
+    alert('ระบบกำลังดึงไฟล์เข้าหน่วยความจำและดำเนินการเปลี่ยนสถานะ...')
+    memo.value.status = 'ดำเนินการแล้ว'
+    memo.value.pdf_url = URL.createObjectURL(file) 
+    alert('บันทึกและปรับปรุงสถานะเป็น "ดำเนินการแล้ว" เรียบร้อย!')
+  } catch (error) {
+    console.error('Upload Error:', error)
+  }
+}
+
+const cancelMemo = async () => {
+  if (confirm('คุณแน่ใจใช่ไหมว่าต้องการ "ยกเลิกและลบ" ข้อมูลบันทึกข้อความรายการนี้ทิ้ง?')) {
+    alert('ลบข้อมูลบันทึกข้อความเรียบร้อยแล้ว')
+    router.push('/memos')
+  }
+}
+
+const goBack = () => {
+  router.push('/memos') 
+}
+
+const goToEdit = () => {
+  router.push(`/memos/${memo.value.id}/edit`)
+}
+
+onMounted(() => {
+  const memoId = route.params.id || '1'
+  memo.value.id = memoId
+
+  // Mock ข้อมูลทดสอบ (ช่อง document_no จะเอาเลข 56 ไปหยอดในกล่อง Input ให้ทันทีครับ)
+  memo.value.document_no = '56'
+  memo.value.title = 'ขออนุมัติจัดซื้อครุภัณฑ์คอมพิวเตอร์ประจำปี 2026'
+  memo.value.to_position = 'ผู้อำนวยการวิทยาลัยเทคนิคเลย'
+  memo.value.creator_name = 'สมชาย สายลุย'
+  memo.value.created_at = '2026-06-08T07:00:00.000Z'
+  memo.value.status = 'กำลังดำเนินการ' 
+})
+</script>

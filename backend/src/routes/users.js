@@ -10,14 +10,6 @@
 
     // ทุก route ต้อง login + เป็น admin
     router.use(verifyToken, verifyAdmin)
-=======
-// ทุก route ต้อง login + เป็น admin
-// router.use(verifyToken, verifyAdmin)
-
-=======
-    // ทุก route ต้อง login + เป็น admin
-    router.use(verifyToken, verifyAdmin)
-
 
     // GET /api/users → รายชื่อผู้ใช้ทั้งหมด
     router.get('/', controller.getAll)
