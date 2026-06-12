@@ -73,7 +73,7 @@
           >
             <option value="" disabled selected>เลือกสิทธิการใช้งาน</option>
             <option value="Admin">Admin</option>
-            <option value="ผู้ใช้ทั่วไป">ผู้ใช้ทั่วไป</option>
+            <option value="user">ผู้ใช้ทั่วไป</option>
           </select>
         </div>
 
@@ -177,6 +177,31 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 
+// ==========================================
+// 🛠️ URL ของ Express Backend
+// ==========================================
+const API_URL = "http://localhost:3000/api/users";
+
+// ดึง token จาก localStorage (เซฟไว้ตอน login)
+const getToken = () => localStorage.getItem("token");
+
+// helper สำหรับ fetch พร้อม Authorization header
+const apiFetch = async (url, options = {}) => {
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${getToken()}`,
+      ...options.headers,
+    },
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "เกิดข้อผิดพลาด");
+  return data;
+};
+
+// ==========================================
+
 const form = ref({
   name: "",
   position: "",
@@ -189,6 +214,24 @@ const users = ref([]);
 const searchQuery = ref("");
 const isEditing = ref(false);
 const editId = ref(null);
+
+// 📥 ดึงรายชื่อผู้ใช้งานจาก GET /api/users
+const fetchUsers = async () => {
+  try {
+    const data = await apiFetch(API_URL);
+    // backend ส่งกลับเป็น array โดยตรง
+    users.value = data.map((u) => ({
+      id: u.id,
+      name: u.full_name || "",
+      position: u.department || "",
+      email: u.email || "",
+      role: u.role || "user",
+    }));
+  } catch (err) {
+    console.error("fetchUsers error:", err.message);
+    alert("ดึงข้อมูลไม่สำเร็จ: " + err.message);
+  }
+};
 
 onMounted(() => {
   const savedUsers = localStorage.getItem("saved_users");
@@ -215,101 +258,113 @@ onMounted(() => {
     ];
     saveToStorage();
   }
+  fetchUsers();
 });
 
 const saveToStorage = () => {
   localStorage.setItem("saved_users", JSON.stringify(users.value));
 };
 
+// 🔍 ค้นหา Real-time
 const filteredUsers = computed(() => {
   const query = searchQuery.value.trim().toLowerCase();
   if (!query) return users.value;
-
-  return users.value.filter((user) => {
-    return (
-      user.name.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      user.role.toLowerCase().includes(query)
-    );
-  });
+  return users.value.filter(
+    (u) =>
+      (u.name && u.name.toLowerCase().includes(query)) ||
+      (u.email && u.email.toLowerCase().includes(query)) ||
+      (u.role && u.role.toLowerCase().includes(query)) ||
+      (u.position && u.position.toLowerCase().includes(query))
+  );
 });
 
 const resetForm = () => {
-  form.value = {
-    name: "",
-    position: "",
-    email: "",
-    password: "",
-    role: "",
-  };
+  form.value = { name: "", position: "", email: "", password: "", role: "" };
   isEditing.value = false;
   editId.value = null;
 };
 
 const submitForm = () => {
+// 💾 บันทึก / แก้ไข
+const submitForm = async () => {
   if (
     !form.value.name ||
     !form.value.position ||
     !form.value.email ||
-    !form.value.password ||
-    !form.value.role
+    !form.value.role ||
+    (!isEditing.value && !form.value.password)
   ) {
     alert("กรุณากรอกข้อมูลให้ครบถ้วน");
     return;
   }
 
-  if (isEditing.value) {
-    const index = users.value.findIndex(u => u.id === editId.value);
-    if (index !== -1) {
-      users.value[index] = {
-        id: editId.value,
-        name: form.value.name,
-        position: form.value.position,
-        email: form.value.email,
-        password: form.value.password,
+  try {
+    if (isEditing.value) {
+      // PUT /api/users/:id
+      const body = {
+        full_name: form.value.name,
+        department: form.value.position,
         role: form.value.role,
       };
-    }
-  } else {
-    users.value.push({
-      id: Date.now(),
-      name: form.value.name,
-      position: form.value.position,
-      email: form.value.email,
-      password: form.value.password,
-      role: form.value.role,
-    });
-  }
+      if (form.value.password) body.password = form.value.password;
 
-  saveToStorage();
-  resetForm();
+      await apiFetch(`${API_URL}/${editId.value}`, {
+        method: "PUT",
+        body: JSON.stringify(body),
+      });
+      alert("แก้ไขข้อมูลผู้ใช้งานสำเร็จ");
+    } else {
+      // POST /api/users
+      await apiFetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          full_name: form.value.name,
+          department: form.value.position,
+          email: form.value.email,
+          password: form.value.password,
+          role: form.value.role,
+        }),
+      });
+      alert("เพิ่มผู้ใช้งานเข้าฐานข้อมูลสำเร็จ");
+    }
+
+    await fetchUsers();
+    resetForm();
+  } catch (err) {
+    alert("เกิดข้อผิดพลาดในการบันทึก: " + err.message);
+  }
 };
 
+// ✏️ โหลดข้อมูลขึ้นฟอร์มเพื่อแก้ไข
 const editUser = (user) => {
   isEditing.value = true;
   editId.value = user.id;
-
   form.value = {
     name: user.name,
     position: user.position,
     email: user.email,
-    password: user.password,
+    password: "",
     role: user.role,
   };
 };
 
-const cancelEdit = () => {
-  resetForm();
-};
+const cancelEdit = () => resetForm();
 
 const deleteUser = (user) => {
   const isConfirmed = confirm(`คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`);
+// ❌ ลบผู้ใช้งาน DELETE /api/users/:id
+const deleteUser = async (user) => {
+  const isConfirmed = confirm(
+    `คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`
+  );
   if (isConfirmed) {
-    if (isEditing.value && editId.value === user.id) {
-      resetForm();
+    try {
+      await apiFetch(`${API_URL}/${user.id}`, { method: "DELETE" });
+      alert("ลบข้อมูลสำเร็จ");
+      await fetchUsers();
+    } catch (err) {
+      alert("ลบข้อมูลผิดพลาด: " + err.message);
     }
-    users.value = users.value.filter(u => u.id !== user.id);
-    saveToStorage();
   }
 };
 </script>
