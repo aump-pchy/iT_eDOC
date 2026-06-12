@@ -86,7 +86,7 @@ exports.getAll = async (req, res) => {
 exports.getOne = async (req, res) => {
   try {
     const { id } = req.params
-
+    console.log('Received request for memo ID:', id)
     // ดึงข้อมูลตาม ID ที่ส่งมา
     const { data: memo, error } = await supabase
       .from('memos')
