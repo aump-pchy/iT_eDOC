@@ -1,5 +1,4 @@
 <template>
-<<<<<<< HEAD
   <div class="min-h-screen flex flex-col items-center justify-center px-4"
        style="background: linear-gradient(160deg, #6d0d30 0%, #a0163f 30%, #d45080 60%, #f5e0ea 85%, #fff 100%);">
 
@@ -23,72 +22,18 @@
           <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
           <input v-model="email" type="email"
             placeholder="your@email.com"
+            @keyup.enter="handleLogin"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
           <input v-model="password" type="password"
             placeholder="••••••••"
+            @keyup.enter="handleLogin"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
 
         <p v-if="errorMsg" class="text-xs text-red-500">{{ errorMsg }}</p>
-=======
-  <div class="min-h-screen flex items-center justify-center relative overflow-hidden"
-       style="background: linear-gradient(135deg, #a0163f 0%, #c4185a 40%, #e8c4d0 100%);">
-
-    <!-- Card -->
-    <div class="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8">
-
-      <!-- Logo + Title -->
-      <div class="flex flex-col items-center mb-8">
-        <img src="/img/IT.png" alt="logo"
-             class="w-20 h-20 object-contain mb-3"
-             @error="$event.target.style.display='none'" />
-        <h1 class="text-2xl font-bold" style="color: #a0163f;">iT-e-Document</h1>
-        <p class="text-xs text-gray-400 mt-1">ระบบจัดการหนังสือราชการภายในออนไลน์</p>
-      </div>
-
-      <!-- Form -->
-      <div class="space-y-4">
-        <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1">อีเมล</label>
-          <input
-            v-model="email"
-            type="email"
-            placeholder="your@email.com"
-            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
-            style="focus-ring-color: #a0163f;"
-            @keyup.enter="handleLogin"
-          />
-        </div>
-
-        <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1">รหัสผ่าน</label>
-          <input
-            v-model="password"
-            type="password"
-            placeholder="••••••••"
-            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
-            @keyup.enter="handleLogin"
-          />
-        </div>
-
-        <p v-if="errorMsg" class="text-red-500 text-xs text-center">{{ errorMsg }}</p>
-
-        <button
-          @click="handleLogin"
-          :disabled="!isValid || loading"
-          class="w-full py-2.5 rounded-xl text-white font-medium text-sm transition-all"
-          :class="isValid && !loading
-            ? 'opacity-100 cursor-pointer hover:opacity-90'
-            : 'opacity-60 cursor-not-allowed'"
-          style="background: linear-gradient(135deg, #a0163f, #c4185a);"
-        >
-          {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
-        </button>
-      </div>
->>>>>>> feature/backend-auth
 
         <button
           @click="handleLogin"
@@ -125,11 +70,7 @@ async function handleLogin() {
   loading.value  = true
   try {
     await auth.login(email.value, password.value)
-<<<<<<< HEAD
-    router.push('/') // ถ้าผ่านจริง จะวาร์ปไปหน้าดึงรายการบันทึกข้อความทันที
-=======
-    router.push('/memos')
->>>>>>> feature/backend-auth
+    router.push('/') // ไปหน้า dashboard
   } catch (err) {
     errorMsg.value = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
   } finally {
