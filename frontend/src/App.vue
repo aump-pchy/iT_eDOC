@@ -3,6 +3,8 @@ import AppNavbar from '@/components/AppNavbar.vue'
 </script>
 
 <template>
-  <AppNavbar />
-  <RouterView />
+  <div>
+    <AppNavbar />
+    <RouterView />
+  </div>
 </template>

@@ -33,6 +33,12 @@
           : 'text-[rgba(255,255,255,0.5)] hover:text-white hover:bg-[rgba(255,255,255,0.07)]'">
         👥 จัดการผู้ใช้
       </RouterLink>
+      <RouterLink 
+        to="/developers" 
+        class="text-slate-600 hover:text-[#d4145a] px-3 py-2 rounded-md text-sm font-bold transition-colors"
+      >
+        คณะผู้พัฒนา ⚡
+      </RouterLink>
     </div>
 
     <!-- Right -->
