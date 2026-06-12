@@ -9,12 +9,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
-<<<<<<< HEAD
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
-=======
-    "bcryptjs": "^2.4.3",
->>>>>>> origin/feature/backend-users
     "cors": "^2.8.6",
     "dotenv": "^16.6.1",
     "express": "^4.22.2",
