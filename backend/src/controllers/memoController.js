@@ -46,22 +46,31 @@ async function generateMemoNumber() {
 // GET /api/memos
 // ดูรายการบันทึกทั้งหมด (มี search และ filter)
 // ──────────────────────────────────────────
+// ──────────────────────────────────────────
+// GET /api/memos (เวอร์ชันซ่อมแซมเสร็จสมบูรณ์)
+// ──────────────────────────────────────────
 exports.getAll = async (req, res) => {
   try {
     const { search, status } = req.query
 
-    // เริ่มต้นสร้าง Query ดึงข้อมูลจาก Supabase ตาราง memos เรียงจากใหม่ไปเก่า
+    // 1. ✨ เปลี่ยนเป็นเครื่องหมาย Backtick (`) เพื่อให้เคาะขึ้นบรรทัดใหม่ใน select ได้อย่างถูกต้อง
     let query = supabase
       .from('memos')
-      .select('*')
+      .select(`
+        *,
+        profiles!created_by (
+          full_name
+        )
+      `)
       .order('created_at', { ascending: false })
 
-    // ถ้ามีคำค้นหา (search) -> ให้กรองจาก subject หรือ memo_number
+    // 2. ถ้ามีคำค้นหา (search)
     if (search) {
+      // ค้นหาจากหัวข้อ หรือ เลขที่หนังสือ
       query = query.or(`subject.ilike.%${search}%,memo_number.ilike.%${search}%`)
     }
 
-    // ถ้ามีสถานะ (status) -> ให้กรองตรง ๆ ตามสถานะเอกสาร
+    // 3. ถ้ามีสถานะ (status)
     if (status) {
       query = query.eq('status', status)
     }
@@ -70,11 +79,11 @@ exports.getAll = async (req, res) => {
 
     if (error) throw error
 
-    // ส่งข้อมูลกลับไปหาหน้าบ้าน
+    // ส่งข้อมูลที่มีโครงสร้าง profiles พ่วงกลับไปหาหน้าบ้าน
     res.status(200).json(memos)
 
   } catch (err) {
-    console.error(err)
+    console.error("🚨 ฟังก์ชัน getAll พังเพราะ ->", err)
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูลทั้งหมด' })
   }
 }
@@ -135,7 +144,7 @@ exports.create = async (req, res) => {
         .single()
 
       if (existingMemo) {
-        return res.status(400).json({ message: 'เลขที่บันทึกข้อความ ทส. นี้ ถูกใช้งานในระบบไปแล้วครับ' })
+        return res.status(400).json({ message: 'เลขที่บันทึกข้อความ ทส. นี้ ถูกใช้งานในระบบไปแล้ว' })
       }
     }
 
@@ -176,7 +185,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { id } = req.params
-    const { subject, recipient, operator, content, status } = req.body
+    const { subject, recipient, full_name, content, status } = req.body
 
     // 1. ตรวจสอบว่ามีเอกสารรหัส ID นี้อยู่จริงหรือไม่
     // (เอา .single() ออกชั่วคราว เพื่อไม่ให้ Supabase โยนเออร์เรอร์ 500 PGRST116 เวลาใส่ ID ผิด)
@@ -187,7 +196,7 @@ exports.update = async (req, res) => {
 
     // เช็กว่าถ้าเกิด error หรือค้นหาแล้วไม่เจอข้อมูลเลยสักแถวในระบบ
     if (fetchError || !memos || memos.length === 0) {
-      return res.status(404).json({ error: 'ไม่พบเอกสารที่ต้องการแก้ไขในระบบครับอ้าย' })
+      return res.status(404).json({ error: 'ไม่พบเอกสารที่ต้องการแก้ไขในระบบ' })
     }
 
     // ดึงข้อมูลแถวแรกออกมาเพื่อนำมาเช็กสิทธิ์ต่อ
@@ -196,7 +205,14 @@ exports.update = async (req, res) => {
     // 2. เช็กสิทธิ์ความปลอดภัย — แก้ไขได้เฉพาะคนสร้าง (เจ้าของ) หรือผู้ที่มีสิทธิ์เป็น admin
     // (ใส่เครื่องหมาย // เปิดใช้งาน หรือปิดใช้งานตามที่อ้ายต้องการเทสได้เลยครับ)
     if (memo.created_by !== req.user?.id && req.user?.role !== 'admin') {
-      return res.status(403).json({ error: 'อ้ายไม่มีสิทธิ์แก้ไขเอกสารฉบับนี้ครับ สิทธิ์นี้เป็นของเจ้าของหรือผู้ดูแลระบบเท่านั้น' })
+      return res.status(403).json({ error: 'คุณไม่มีสิทธิ์แก้ไขเอกสารฉบับนี้ สิทธิ์นี้เป็นของเจ้าของหรือผู้ดูแลระบบเท่านั้น' })
+    }
+
+    let dbStatus = status; // ค่าเริ่มต้น
+    if (status === 'กำลังดำเนินการ') {
+      dbStatus = 'draft'; // หรือ 'pending' (อิงตามค่าเก่าของคุณเปาที่เป็น draft ค่ะ)
+    } else if (status === 'ดำเนินการแล้ว') {
+      dbStatus = 'completed'; // หรือคำภาษาอังกฤษที่ระบบของกลุ่มกำหนดไว้
     }
 
     // 3. เริ่มทำการเขียนข้อมูลใหม่ทับลงไป
@@ -205,20 +221,43 @@ exports.update = async (req, res) => {
       .update({ 
         subject, 
         recipient, 
-        operator, 
-        content 
+        content,
+        status: dbStatus
         // ตัด status และตัวแปรอื่น ๆ ออกเพื่อไม่ให้โดน RLS บล็อกสิทธิ์ชั่วคราว
       })
       .eq('id', id)
       .select()
       .single()
 
-    if (updateError) throw updateError
+    if (updateError) {
+    console.log("❌ Supabase พังเพราะสาเหตุนี้ ->", updateError)
+      throw updateError
+    }
 
-    res.status(200).json({ message: 'อัปเดตข้อมูลเอกสารเรียบร้อยแล้วครับ', data: updatedMemo })
+const targetUserId = memo.user_id || memo.profile_id || memo.created_by || memo.operator_id;
+
+    if (targetUserId && full_name) {
+      // อัปเดตชื่อใหม่ลงตาราง profiles จริงๆ บน Supabase
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ full_name: full_name }) 
+        .eq('id', targetUserId); 
+
+      if (profileError) throw profileError;
+    }
+
+    const responseData = {
+      ...updatedMemo,
+      status: status, // ส่งสถานะคำไทยกลับไปอัปเดตหน้าบ้านทันที
+      profiles: {
+        full_name: full_name // ✨ พ่วงชื่อใหม่ส่งกลับไปด้วย หน้าบ้านจะได้มีของใช้
+      }
+    }
+
+    res.status(200).json({ message: 'อัปเดตข้อมูลเอกสารเรียบร้อยแล้ว', data: responseData })
 
   } catch (err) {
-    console.error(err)
+    console.error("🚨 ระบบหลังบ้านพังเพราะ ->",err)
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการแก้ไขข้อมูลภายในเซิร์ฟเวอร์' })
   }
 }
@@ -250,7 +289,7 @@ exports.remove = async (req, res) => {
 
     if (deleteError) throw deleteError
 
-    res.status(200).json({ message: 'ลบข้อมูลบันทึกข้อความออกจากระบบสำเร็จแล้วครับอ้าย!' })
+    res.status(200).json({ message: 'ลบข้อมูลบันทึกข้อความแล้ว' })
 
   } catch (err) {
     console.error(err)
