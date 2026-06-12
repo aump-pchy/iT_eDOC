@@ -225,7 +225,7 @@ const fetchNextMemoNumber = async () => {
           const seq = parseInt(match[1], 10)
           if (seq > maxSeq) maxSeq = seq
         }
-      }
+      }ฟ
     })
 
     formData.memoSeq = (maxSeq + 1).toString()
