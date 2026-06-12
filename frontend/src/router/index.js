@@ -11,6 +11,12 @@ const router = createRouter({
       meta: { public: true }
     },
     {
+      path: '/',
+      name: 'home',
+      component: () => import('../views/HomeView.vue'),
+      // ← ลบ public: true ออก เพราะต้อง login ก่อน
+    },
+    {
       path: '/memos',
       name: 'memos',
       component: () => import('../views/MemoListView.vue'),
@@ -29,22 +35,28 @@ const router = createRouter({
       path: '/memos/:id/edit',
       name: 'memo-edit',
       component: () => import('../views/MemoFormView.vue'),
-    },  
-    { path: '/', name: 'home', component: () => import('../views/HomeView.vue') },
+    },
     {
-  path: '/admin/users',
-  name: 'admin-users',
-  component: () => import('../views/AdminUsersView.vue'),
-},
+      path: '/admin/users',
+      name: 'admin-users',
+      component: () => import('../views/AdminUsersView.vue'),
+      meta: { adminOnly: true }
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/'
+    }
   ],
 })
 
-// Route Guard — ยังไม่ login ไป /memos ไม่ได้
-// router.beforeEach((to, _, next) => {
-//   const auth = useAuthStore()
-//   if (!to.meta.public && !auth.isLoggedIn) return next('/login')
-//   if (to.name === 'login' && auth.isLoggedIn) return next('/memos')
-//   next()
-// })
+router.beforeEach((to, _, next) => {
+  const auth = useAuthStore()
+
+  if (!to.meta.public && !auth.isLoggedIn) return next('/login')
+  if (to.name === 'login' && auth.isLoggedIn) return next('/')
+  if (to.meta.adminOnly && !auth.isAdmin) return next('/memos')
+
+  next()
+})
 
 export default router
