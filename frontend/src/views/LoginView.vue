@@ -2,18 +2,15 @@
   <div class="min-h-screen flex flex-col items-center justify-center px-4"
        style="background: linear-gradient(160deg, #6d0d30 0%, #a0163f 30%, #d45080 60%, #f5e0ea 85%, #fff 100%);">
 
-    <!-- Logo -->
     <div class="mb-3">
       <img src="/logo.png" alt="IT Loei" class="w-24 h-24 object-contain drop-shadow-lg" />
     </div>
 
-    <!-- ชื่อระบบ -->
     <h1 class="text-2xl font-semibold text-white mb-1">iT-e-Document</h1>
     <p class="text-sm font-light mb-8" style="color: rgba(255,255,255,0.6);">
       ระบบจัดการหนังสือราชการภายในออนไลน์
     </p>
 
-    <!-- Card -->
     <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
       <h2 class="text-base font-semibold text-gray-800 mb-5">เข้าสู่ระบบ</h2>
 
@@ -22,22 +19,20 @@
           <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
           <input v-model="email" type="email"
             placeholder="your@email.com"
-            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
-            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition" />
         </div>
+
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
           <input v-model="password" type="password"
             placeholder="••••••••"
-            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
-            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition" />
         </div>
 
-        <!-- ✅ แสดง error message จาก server หรือ default -->
         <p v-if="errorMsg" class="text-red-500 text-xs text-center">{{ errorMsg }}</p>
 
         <button
