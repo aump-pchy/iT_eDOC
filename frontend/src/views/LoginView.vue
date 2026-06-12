@@ -22,6 +22,8 @@
           <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
           <input v-model="email" type="email"
             placeholder="your@email.com"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
@@ -29,19 +31,32 @@
           <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
           <input v-model="password" type="password"
             placeholder="••••••••"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
 
-        <p v-if="errorMsg" class="text-xs text-red-500">{{ errorMsg }}</p>
+        <!-- ✅ แสดง error message จาก server หรือ default -->
+        <p v-if="errorMsg" class="text-red-500 text-xs text-center">{{ errorMsg }}</p>
 
         <button
           @click="handleLogin"
           :disabled="!isValid || loading"
-          :class="isValid && !loading ? 'opacity-100' : 'opacity-50 cursor-not-allowed'"
-          class="w-full py-2.5 rounded-lg text-sm font-medium text-white transition-opacity"
-          style="background: #a0163f;">
-          {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
+          class="w-full py-2.5 rounded-xl text-white font-medium text-sm transition-all"
+          :class="isValid && !loading
+            ? 'opacity-100 cursor-pointer hover:opacity-90'
+            : 'opacity-60 cursor-not-allowed'"
+          style="background: linear-gradient(135deg, #a0163f, #c4185a);"
+        >
+          <span v-if="loading" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            กำลังเข้าสู่ระบบ...
+          </span>
+          <span v-else>เข้าสู่ระบบ</span>
         </button>
       </div>
     </div>
@@ -69,10 +84,14 @@ async function handleLogin() {
   errorMsg.value = ''
   loading.value  = true
   try {
-    await auth.login(email.value, password.value)
-    router.push('/') // ไปหน้า dashboard
+    await auth.login(email.value.trim(), password.value)
+    router.push('/memos')
   } catch (err) {
-    errorMsg.value = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+    // ✅ แสดง error message จาก server ถ้ามี ไม่งั้นใช้ข้อความ default
+    errorMsg.value =
+      err?.response?.data?.error ||
+      err?.message ||
+      'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
   } finally {
     loading.value = false
   }

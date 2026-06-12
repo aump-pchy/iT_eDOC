@@ -7,6 +7,7 @@
     const controller = require('../controllers/userController')
     const { verifyToken, verifyAdmin } = require('../middleware/auth')
 
+
     // ทุก route ต้อง login + เป็น admin
     router.use(verifyToken, verifyAdmin)
 
