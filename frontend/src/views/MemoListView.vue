@@ -34,93 +34,113 @@
             <p>กำลังโหลดข้อมูลบันทึกข้อความจากฐานข้อมูล...</p>
           </div>
 
+          <!-- ✨ ปรับปรุงโครงสร้างตารางตามบรีฟอาจารย์ เหลือ 3 คอลัมน์ -->
           <table v-else class="w-full text-left border-collapse">
             <thead>
               <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold">
-                <th class="py-4 px-6 w-32 text-center">เลขที่หนังสือ</th>
-                <th class="py-4 px-6">เรื่อง</th>
-                <th class="py-4 px-6 w-48">ผู้บันทึก</th>
-                <th class="py-4 px-6 w-40 text-center">สถานะเอกสาร</th>
+                <!-- ข้อ 1: คอลัมน์แรก ข้อมูลเอกสาร -->
+                <th class="py-4 px-6">ข้อมูลเอกสาร</th>
+                <!-- ข้อ 2: เปลี่ยนหัวข้อจาก ผู้บันทึก เป็น ผู้ดำเนินงาน -->
+                <th class="py-4 px-6 w-56">ผู้ดำเนินงาน</th>
+                <!-- ข้อ 3: คอลัมน์จัดการยังคงอยู่เหมือนเดิม -->
                 <th class="py-4 px-6 w-64 text-center">จัดการ</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-700">
-  <tr v-for="memo in filteredMemos" :key="memo.id" class="hover:bg-slate-50/70 transition-colors">
-    
-    <td class="py-4 px-6 text-center font-bold text-blue-600 bg-blue-50/30 whitespace-nowrap">
-      {{ memo.memo_number ? `${memo.memo_number}/${new Date().getFullYear() + 543}` : '' }}
-    </td>
-    
-    <td class="py-4 px-6 font-medium text-slate-800">
-      {{ memo.subject }}
-    </td>
-    
-    <td class="py-4 px-6 text-slate-500 whitespace-nowrap">
-      <div class="flex items-center gap-2">
-        <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
-          {{ memo.profiles?.full_name ? memo.profiles.full_name.charAt(0) : 'U' }}
-        </div>
-        <span class="font-medium text-slate-700">{{ memo.profiles?.full_name || 'ไม่ระบุชื่อผู้ดำเนินการ' }}</span>
-      </div>
-    </td>
+              <tr v-for="memo in filteredMemos" :key="memo.id" class="hover:bg-slate-50/70 transition-colors">
+                
+                <!-- 🟢 คอลัมน์ที่ 1: ข้อมูลเอกสาร (มัดรวม 4 อย่างแนวดิ่ง) -->
+                <td class="py-4 px-6">
+                  <div class="flex flex-col gap-1.5">
+                    <!-- 1.1 เลขที่หนังสือ -->
+                    <span class="font-bold text-blue-600 text-base">
+                      {{ memo.memo_number ? `${memo.memo_number}/${new Date().getFullYear() + 543}` : '' }}
+                    </span>
+                    
+                    <!-- 1.2 เรื่อง -->
+                    <span class="font-medium text-slate-800 text-sm">
+                      เรื่อง: {{ memo.subject }}
+                    </span>
+                    
+                    <!-- 1.3 ลงเมื่อวันที่ (แปลงวันที่ให้อ่านง่ายสไตล์ไทย) -->
+                    <span class="text-xs text-slate-400">
+                      ลงเมื่อวันที่: {{ memo.created_at ? new Date(memo.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : '-' }}
+                    </span>
+                    
+                    <!-- 1.4 สถานะเอกสาร (ย้ายมารวมอยู่ด้านล่างข้อมูลเอกสาร) -->
+                    <div class="inline-flex items-center gap-2 font-bold text-xs mt-0.5">
+                      <span 
+                        class="w-2 h-2 rounded-full inline-block shrink-0 shadow-sm"
+                        :class="{
+                          'bg-amber-400': memo.status === 'กำลังดำเนินการ' || memo.status === 'draft',
+                          'bg-emerald-500': memo.status === 'ดำเนินการแล้ว' || memo.status === 'completed',
+                          'bg-slate-300': memo.status !== 'กำลังดำเนินการ' && memo.status !== 'draft' && memo.status !== 'ดำเนินการแล้ว' && memo.status !== 'completed'
+                        }"
+                      ></span>
+                      
+                      <span 
+                        :class="{
+                          'text-amber-600': memo.status === 'กำลังดำเนินการ' || memo.status === 'draft',
+                          'text-emerald-600': memo.status === 'ดำเนินการแล้ว' || memo.status === 'completed',
+                          'text-slate-500': memo.status !== 'กำลังดำเนินการ' && memo.status !== 'draft' && memo.status !== 'ดำเนินการแล้ว' && memo.status !== 'completed'
+                        }"
+                      >
+                        {{ memo.status === 'draft' || memo.status === 'กำลังดำเนินการ' ? 'กำลังดำเนินการ' : (memo.status === 'completed' || memo.status === 'ดำเนินการแล้ว' ? 'ดำเนินการแล้ว' : memo.status) }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+                
+                <!-- 🟢 คอลัมน์ที่ 2: ผู้ดำเนินงาน -->
+                <td class="py-4 px-6 text-slate-500 whitespace-nowrap align-middle">
+                  <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600 uppercase">
+                      {{ memo.profiles?.full_name ? memo.profiles.full_name.charAt(0) : 'U' }}
+                    </div>
+                    <span class="font-medium text-slate-700">{{ memo.profiles?.full_name || 'ไม่ระบุชื่อผู้ดำเนินการ' }}</span>
+                  </div>
+                </td>
 
-<td class="py-4 px-6 whitespace-nowrap text-center">
-  <div class="inline-flex items-center gap-2 font-bold text-sm justify-center w-full">
-    <span 
-      class="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm"
-      :class="{
-        'bg-amber-400': memo.status === 'กำลังดำเนินการ' || memo.status === 'draft',
-        'bg-emerald-500': memo.status === 'ดำเนินการแล้ว' || memo.status === 'completed',
-        'bg-slate-300': memo.status !== 'กำลังดำเนินการ' && memo.status !== 'draft' && memo.status !== 'ดำเนินการแล้ว' && memo.status !== 'completed'
-      }"
-    ></span>
-    
-    <span 
-      :class="{
-        'text-amber-600': memo.status === 'กำลังดำเนินการ' || memo.status === 'draft',
-        'text-emerald-600': memo.status === 'ดำเนินการแล้ว' || memo.status === 'completed',
-        'text-slate-500': memo.status !== 'กำลังดำเนินการ' && memo.status !== 'draft' && memo.status !== 'ดำเนินการแล้ว' && memo.status !== 'completed'
-      }"
-    >
-      {{ memo.status === 'draft' || memo.status === 'กำลังดำเนินการ' ? 'กำลังดำเนินการ' : (memo.status === 'completed' || memo.status === 'ดำเนินการแล้ว' ? 'ดำเนินการแล้ว' : memo.status) }}
-    </span>
-  </div>
-</td>
+                <!-- 🟢 คอลัมน์ที่ 3: จัดการ (ซ่อนปุ่มแก้ไขถ้าสถานะดำเนินการแล้ว) -->
+                <td class="py-4 px-6 whitespace-nowrap align-middle">
+                  <div class="flex flex-row items-center justify-center gap-2">
+                    
+                    <router-link 
+                      :to="`/memo-detail/${memo.id}`" 
+                      class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      รายละเอียด
+                    </router-link>
 
-    <td class="py-4 px-6 whitespace-nowrap">
-      <div class="flex flex-row items-center justify-center gap-2">
-        
-        <router-link 
-          :to="`/memo-detail/${memo.id}`" 
-          class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-        >
-          รายละเอียด
-        </router-link>
+                    <!-- 🔥 เช็กสถานะ: ถ้าเท่ากับ 'completed' หรือ 'ดำเนินการแล้ว' จะซ่อนปุ่มแก้ไขนี้ไปทันทีค่ะ -->
+                    <button
+                      v-if="memo.status !== 'completed' && memo.status !== 'ดำเนินการแล้ว'"
+                      @click="openEditModal(memo)"
+                      class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      แก้ไข
+                    </button>
 
-        <button
-          @click="openEditModal(memo)"
-          class="bg-amber-50 hover:bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-        >
-          แก้ไข
-        </button>
+                    <button 
+                      @click="deleteMemo(memo.id)"
+                      class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                    >
+                      ลบ
+                    </button>
 
-        <button 
-          @click="deleteMemo(memo.id)"
-          class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-        >
-          ลบ
-        </button>
-
-      </div>
-    </td>
-  </tr>
-</tbody>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </div>
       </div>
 
     </div>
 
+    <!-- ────────────────────────────────────────── -->
+    <!-- 📦 ฟอร์มแก้ไขข้อมูล Modal (คงเดิมไม่เปลี่ยนแปลง) -->
+    <!-- ────────────────────────────────────────── -->
     <div v-if="showEditModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-all">
       <div class="bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
         <div class="border-b border-slate-100 pb-4 mb-5">
