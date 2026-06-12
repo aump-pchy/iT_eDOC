@@ -1,19 +1,11 @@
-// ============================================
-// routes/auth.js
-// กำหนด URL สำหรับ Authentication
-// ============================================
+﻿const express  = require('express')
+const router   = express.Router()
+const authCtrl = require('../controllers/authController')
+const { verifyToken, verifyAdmin } = require('../middleware/auth')
 
-const router     = require('express').Router()
-const controller = require('../controllers/authController')
-const { verifyToken } = require('../middleware/auth')
-
-// POST /api/auth/login → เข้าสู่ระบบ
-router.post('/login', controller.login)
-
-// POST /api/auth/logout → ออกจากระบบ
-router.post('/logout', verifyToken, controller.logout)
-
-// GET /api/auth/me → ดูข้อมูลตัวเอง
-router.get('/me', verifyToken, controller.getMe)
+router.post('/login',    authCtrl.login)
+router.post('/logout',   authCtrl.logout)
+router.post('/register', verifyToken, verifyAdmin, authCtrl.register)
+router.get('/me',        verifyToken, authCtrl.getMe)
 
 module.exports = router
