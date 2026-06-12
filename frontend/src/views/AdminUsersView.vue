@@ -72,8 +72,8 @@
             class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm cursor-pointer"
           >
             <option value="" disabled selected>เลือกสิทธิการใช้งาน</option>
-            <option value="Admin">Admin</option>
-            <option value="user">ผู้ใช้ทั่วไป</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
           </select>
         </div>
 
@@ -136,7 +136,7 @@
                   {{ user.name }}
                 </h3>
                 <span
-                  :class="user.role === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-200 text-gray-700'"
+                  :class="user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-200 text-gray-700'"
                   class="text-xs px-2.5 py-0.5 rounded-full font-medium"
                 >
                   {{ user.role }}

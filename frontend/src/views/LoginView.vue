@@ -25,7 +25,7 @@
             class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
             :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+             />
         </div>
         <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
@@ -34,7 +34,7 @@
             class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
             :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
+             />
         </div>
 
         <!-- ✅ แสดง error message จาก server หรือ default -->
@@ -80,14 +80,15 @@ const isValid = computed(() =>
 )
 
 async function handleLogin() {
-  if (!isValid.value || loading.value) return
+  if (!isValid.value || loading.value) return  // ← มีแล้ว แต่เช็คว่า loading ทำงานจริงไหม
+  
   errorMsg.value = ''
-  loading.value  = true
+  loading.value  = true  // ← set true ก่อน await
+  
   try {
     await auth.login(email.value.trim(), password.value)
-    router.push('/memos')
+    router.push('/')  // ← เปลี่ยนจาก /memos เป็น /
   } catch (err) {
-    // ✅ แสดง error message จาก server ถ้ามี ไม่งั้นใช้ข้อความ default
     errorMsg.value =
       err?.response?.data?.error ||
       err?.message ||
