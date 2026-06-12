@@ -1,44 +1,43 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center relative overflow-hidden"
-       style="background: linear-gradient(135deg, #a0163f 0%, #c4185a 40%, #e8c4d0 100%);">
+  <div class="min-h-screen flex flex-col items-center justify-center px-4"
+       style="background: linear-gradient(160deg, #6d0d30 0%, #a0163f 30%, #d45080 60%, #f5e0ea 85%, #fff 100%);">
+
+    <!-- Logo -->
+    <div class="mb-3">
+      <img src="/logo.png" alt="IT Loei" class="w-24 h-24 object-contain drop-shadow-lg" />
+    </div>
+
+    <!-- ชื่อระบบ -->
+    <h1 class="text-2xl font-semibold text-white mb-1">iT-e-Document</h1>
+    <p class="text-sm font-light mb-8" style="color: rgba(255,255,255,0.6);">
+      ระบบจัดการหนังสือราชการภายในออนไลน์
+    </p>
 
     <!-- Card -->
-    <div class="relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-8">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <h2 class="text-base font-semibold text-gray-800 mb-5">เข้าสู่ระบบ</h2>
 
-      <!-- Logo + Title -->
-      <div class="flex flex-col items-center mb-8">
-        <img src="/img/IT.png" alt="logo"
-             class="w-20 h-20 object-contain mb-3"
-             @error="$event.target.style.display='none'" />
-        <h1 class="text-2xl font-bold" style="color: #a0163f;">iT-e-Document</h1>
-        <p class="text-xs text-gray-400 mt-1">ระบบจัดการหนังสือราชการภายในออนไลน์</p>
-      </div>
-
-      <!-- Form -->
       <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1">อีเมล</label>
-          <input
-            v-model="email"
-            type="email"
+          <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
+          <input v-model="email" type="email"
             placeholder="your@email.com"
-            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
-            style="focus-ring-color: #a0163f;"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-          />
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
-
         <div>
-          <label class="block text-sm font-medium text-gray-600 mb-1">รหัสผ่าน</label>
-          <input
-            v-model="password"
-            type="password"
+          <label class="block text-xs font-medium text-gray-500 mb-1">รหัสผ่าน</label>
+          <input v-model="password" type="password"
             placeholder="••••••••"
-            class="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
+            class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition"
+            :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             @keyup.enter="handleLogin"
-          />
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400 transition-colors" />
         </div>
 
+        <!-- ✅ แสดง error message จาก server หรือ default -->
         <p v-if="errorMsg" class="text-red-500 text-xs text-center">{{ errorMsg }}</p>
 
         <button
@@ -50,10 +49,16 @@
             : 'opacity-60 cursor-not-allowed'"
           style="background: linear-gradient(135deg, #a0163f, #c4185a);"
         >
-          {{ loading ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ' }}
+          <span v-if="loading" class="flex items-center justify-center gap-2">
+            <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+            กำลังเข้าสู่ระบบ...
+          </span>
+          <span v-else>เข้าสู่ระบบ</span>
         </button>
       </div>
-
     </div>
   </div>
 </template>
@@ -79,10 +84,14 @@ async function handleLogin() {
   errorMsg.value = ''
   loading.value  = true
   try {
-    await auth.login(email.value, password.value)
+    await auth.login(email.value.trim(), password.value)
     router.push('/memos')
   } catch (err) {
-    errorMsg.value = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
+    // ✅ แสดง error message จาก server ถ้ามี ไม่งั้นใช้ข้อความ default
+    errorMsg.value =
+      err?.response?.data?.error ||
+      err?.message ||
+      'อีเมลหรือรหัสผ่านไม่ถูกต้อง'
   } finally {
     loading.value = false
   }

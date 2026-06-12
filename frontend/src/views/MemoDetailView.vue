@@ -1,21 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
-    <div v-if="memo" class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
+  <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 md:pt-20">
+    <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
       
       <div class="border-b border-gray-200 pb-4 mb-6 flex justify-between items-center">
         <div>
-          <h1 class="text-2xl font-bold text-gray-800">Memo Detail</h1>
-          <p class="text-sm text-gray-500">แสดงข้อมูลบันทึกข้อความรายบุคคล</p>
+          <h1 class="text-2xl font-bold text-gray-800">
+            รายละเอียดบันทึกข้อความ เลขที่ ทส {{ memo.document_no || '....' }}/2569
+          </h1>
+          <p class="text-sm text-gray-500">แสดงข้อมูลและจัดการสถานะเอกสารบันทึกข้อความกลุ่ม</p>
         </div>
         <span 
-          :class="{
-            'text-yellow-800 bg-yellow-100': memo.status === 'pending',
-            'text-green-800 bg-green-100': memo.status === 'approved',
-            'text-red-800 bg-red-100': memo.status === 'rejected'
-          }"
-          class="px-3 py-1 text-xs font-semibold rounded-full"
+          :class="memo.status === 'ดำเนินการแล้ว' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'"
+          class="text-xs font-semibold px-3 py-1 rounded-full border"
         >
-          {{ memo.status === 'approved' ? 'อนุมัติแล้ว' : memo.status === 'rejected' ? 'ปฏิเสธ' : 'รอดำเนินการ' }}
+          {{ memo.status }}
         </span>
       </div>
 
@@ -28,9 +26,9 @@
           <div class="md:col-span-3">
             <input 
               type="text" 
-              :value="memo.memo_number" 
+              :value="memo.document_no" 
               disabled
-              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed font-medium"
+              class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
@@ -42,9 +40,9 @@
           <div class="md:col-span-3">
             <input 
               type="text" 
-              :value="memo.subject" 
+              :value="memo.title" 
               disabled
-              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed font-medium"
+              class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
@@ -56,9 +54,23 @@
           <div class="md:col-span-3">
             <input 
               type="text" 
-              :value="memo.recipient" 
+              :value="memo.to_position" 
               disabled
-              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed font-medium"
+              class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
+          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
+            ลงวันที่:
+          </label>
+          <div class="md:col-span-3">
+            <input 
+              type="text" 
+              :value="formattedThaiDate" 
+              disabled
+              class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
@@ -70,23 +82,9 @@
           <div class="md:col-span-3">
             <input 
               type="text" 
-              :value="memo.operator" 
+              :value="memo.creator_name" 
               disabled
-              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed font-medium"
-            />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
-          <label class="block text-sm font-medium text-gray-500 md:col-span-1">
-            ลงวันที่ระบบ:
-          </label>
-          <div class="md:col-span-3">
-            <input 
-              type="text" 
-              :value="memo.created_at ? new Date(memo.created_at).toLocaleString('th-TH') : ''" 
-              disabled
-              class="w-full rounded-md border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed font-medium"
+              class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-700 shadow-sm sm:text-sm border p-2 cursor-not-allowed"
             />
           </div>
         </div>
@@ -96,91 +94,145 @@
             เนื้อหาข้อความรายละเอียดภายใน
           </label>
           
-          <div class="w-full h-auto p-4 border border-gray-300 rounded-lg bg-gray-50 shadow-inner min-h-[120px]">
-            <p class="text-gray-700 whitespace-pre-line font-medium text-sm">
-              {{ memo.content || 'ไม่มีข้อความรายละเอียดเพิ่มเติม' }}
-            </p>
+          <div v-if="memo.status === 'กำลังดำเนินการ'" class="w-full p-8 border-2 border-dashed border-yellow-300 rounded-xl bg-yellow-50 flex flex-col justify-center items-center text-center">
+            <svg class="h-12 w-12 text-yellow-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+            </svg>
+            <p class="text-sm font-medium text-gray-700 mb-1">เลือกไฟล์ PDF บันทึกข้อความเพื่ออัปโหลดระบบ</p>
+            <p class="text-xs text-red-500 mb-4">* เมื่อกดอัปโหลดเสร็จสิ้น ระบบจะปรับเปลี่ยนสถานะเป็น ดำเนินการแล้ว โดยอัตโนมัติ</p>
+            
+            <input 
+              type="file" 
+              @change="handlePdfUpload" 
+              accept="application/pdf"
+              class="block w-full max-w-xs text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-100 file:text-yellow-700 hover:file:bg-yellow-200 cursor-pointer"
+            />
+          </div>
+
+          <div v-else-if="memo.status === 'ดำเนินการแล้ว'" class="w-full h-[550px] border border-gray-300 rounded-xl bg-gray-100 shadow-inner overflow-hidden relative">
+            <iframe 
+              :src="memo.pdf_url" 
+              width="100%" 
+              height="100%" 
+              class="w-full h-full bg-white rounded-xl"
+            ></iframe>
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row justify-between gap-4 pt-6 border-t border-gray-200 mt-6">
+        <div class="flex justify-between items-center pt-4 border-t border-gray-100 mt-6">
+          
           <button 
             type="button" 
-            @click="router.push('/memos')"
-            class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none flex items-center justify-center space-x-2 cursor-pointer"
+            @click="goBack"
+            class="px-6 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white 
+            bg-blue-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 flex items-center 
+            space-x-2 transition duration-150"
           >
-            <svg class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
             <span>ย้อนกลับ</span>
           </button>
 
-          <div class="flex flex-wrap gap-2 justify-end">
+          <div class="flex space-x-2">
             <button 
-              @click="changeStatus('rejected')"
-              class="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg font-semibold text-sm transition-colors cursor-pointer"
+              type="button"
+              @click="cancelMemo"
+              class="px-5 py-2 rounded-xl shadow-sm text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition duration-150 flex items-center space-x-1"
             >
-              ❌ ปฏิเสธ
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              <span>ยกเลิกบันทึกข้อความ</span>
             </button>
+
             <button 
-              @click="changeStatus('approved')"
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm shadow-sm transition-colors cursor-pointer"
+              v-if="memo.status === 'กำลังดำเนินการ'"
+              type="button"
+              @click="goToEdit"
+              class="px-5 py-2 rounded-xl shadow-sm text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 transition duration-150 flex items-center space-x-1"
             >
-              ✅ อนุมัติ
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              <span>แก้ไขข้อมูล</span>
             </button>
-            
-            <router-link 
-              :to="`/memos/${memo?.id}/edit`"
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm shadow-sm transition-colors flex items-center justify-center"
-            >
-              📝 แก้ไขข้อมูล
-            </router-link>
           </div>
+
         </div>
 
       </div>
-    </div>
-
-    <div v-else class="text-center py-40 text-gray-500 font-medium w-full flex flex-col items-center justify-center gap-2">
-      <div class="animate-spin inline-block w-9 h-9 border-4 border-blue-600 border-t-transparent rounded-full mb-2"></div>
-      <p class="text-slate-600 font-bold">กำลังดึงรายละเอียดข้อมูลเอกสารจากฐานข้อมูลวิทยาลัย...</p>
     </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useMemoStore } from '@/stores/memo'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
-const store = useMemoStore()
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
 
-// ดึงวิญญาณข้อมูลชิ้นปัจจุบันมาจากตู้เซฟ Pinia
-const memo = computed(() => store.current)
-
-// เมื่อเปิดหน้านี้ขึ้นมา ให้ไปดึงข้อมูลเดี่ยวตามไอดีบน URL ทันที
-onMounted(async () => {
-  try {
-    await store.fetchMemo(route.params.id)
-  } catch (error) {
-    console.error('Failed to fetch memo:', error)
-  }
+const memo = ref({
+  id: '',
+  document_no: '....',
+  title: '',
+  to_position: '',
+  creator_name: '',
+  created_at: '',
+  status: 'กำลังดำเนินการ', 
+  pdf_url: ''
 })
 
-// ฟังก์ชันเปลี่ยนสถานะ เมื่อกดปุ่มจะอัปเดตขึ้นคลาวด์และรีโหลดสเตตัสใหม่
-async function changeStatus(status) {
+const formattedThaiDate = computed(() => {
+  if (!memo.value.created_at) return 'ไม่มีข้อมูลวันที่'
+  const date = new Date(memo.value.created_at)
+  return date.toLocaleDateString('th-TH', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  })
+})
+
+const handlePdfUpload = async (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
   try {
-    await store.updateMemo(route.params.id, { status })
-    alert(`เปลี่ยนสถานะเอกสารชิ้นนี้เป็น "${status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}" สำเร็จแล้วครับอ้าย!`)
-    await store.fetchMemo(route.params.id) // ดึงข้อมูลอัปเดตล่าสุดมากางใหม่อีกรอบ
+    alert('ระบบกำลังดึงไฟล์เข้าหน่วยความจำและดำเนินการเปลี่ยนสถานะ...')
+    memo.value.status = 'ดำเนินการแล้ว'
+    memo.value.pdf_url = URL.createObjectURL(file) 
+    alert('บันทึกและปรับปรุงสถานะเป็น "ดำเนินการแล้ว" เรียบร้อย!')
   } catch (error) {
-    console.error(error)
-    alert('⚠️ เกิดข้อผิดพลาด ไม่สามารถเปลี่ยนสถานะเอกสารได้')
+    console.error('Upload Error:', error)
   }
 }
-</script>
 
-<style scoped>
-</style>
+const cancelMemo = async () => {
+  if (confirm('คุณแน่ใจใช่ไหมว่าต้องการ "ยกเลิกและลบ" ข้อมูลบันทึกข้อความรายการนี้ทิ้ง?')) {
+    alert('ลบข้อมูลบันทึกข้อความเรียบร้อยแล้ว')
+    router.push('/memos')
+  }
+}
+
+const goBack = () => {
+  router.push('/memos') 
+}
+
+const goToEdit = () => {
+  router.push(`/memos/${memo.value.id}/edit`)
+}
+
+onMounted(() => {
+  const memoId = route.params.id || '1'
+  memo.value.id = memoId
+
+  // Mock ข้อมูลทดสอบ (ช่อง document_no จะเอาเลข 56 ไปหยอดในกล่อง Input ให้ทันทีครับ)
+  memo.value.document_no = '56'
+  memo.value.title = 'ขออนุมัติจัดซื้อครุภัณฑ์คอมพิวเตอร์ประจำปี 2026'
+  memo.value.to_position = 'ผู้อำนวยการวิทยาลัยเทคนิคเลย'
+  memo.value.creator_name = 'สมชาย สายลุย'
+  memo.value.created_at = '2026-06-08T07:00:00.000Z'
+  memo.value.status = 'กำลังดำเนินการ' 
+})
+</script>

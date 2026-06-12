@@ -275,7 +275,7 @@ const handleCheckMemo = async () => {
       errors.memoSeq = `❌ ${fullMemoNumber} ถูกใช้งานในระบบไปแล้ว!`
       alert(`⚠️ เลขบันทึกข้อความ ${fullMemoNumber} ซ้ำในระบบ! กรุณาเปลี่ยนตัวเลข`)
     } else {
-      alert(`เลขที่บันทึกข้อความสามารถใช้งานได้ค!`)
+      alert(`เลขที่บันทึกข้อความสามารถใช้งานได้!`)
     }
   } catch (error) {
     console.error(error)

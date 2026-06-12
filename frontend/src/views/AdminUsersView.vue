@@ -234,36 +234,8 @@ const fetchUsers = async () => {
 };
 
 onMounted(() => {
-  const savedUsers = localStorage.getItem("saved_users");
-  if (savedUsers) {
-    users.value = JSON.parse(savedUsers);
-  } else {
-    users.value = [
-      {
-        id: 1,
-        name: "สมชาย ใจดี",
-        position: "Admin",
-        email: "somchai@email.com",
-        password: "password123",
-        role: "Admin"
-      },
-      {
-        id: 2,
-        name: "สมหญิง รักเรียน",
-        position: "Marketing",
-        email: "somying@email.com",
-        password: "password456",
-        role: "ผู้ใช้ทั่วไป"
-      }
-    ];
-    saveToStorage();
-  }
   fetchUsers();
 });
-
-const saveToStorage = () => {
-  localStorage.setItem("saved_users", JSON.stringify(users.value));
-};
 
 // 🔍 ค้นหา Real-time
 const filteredUsers = computed(() => {
@@ -284,7 +256,6 @@ const resetForm = () => {
   editId.value = null;
 };
 
-const submitForm = () => {
 // 💾 บันทึก / แก้ไข
 const submitForm = async () => {
   if (
@@ -350,8 +321,6 @@ const editUser = (user) => {
 
 const cancelEdit = () => resetForm();
 
-const deleteUser = (user) => {
-  const isConfirmed = confirm(`คุณต้องการยืนยันที่จะลบข้อมูลของ "${user.name}" ใช่หรือไม่?`);
 // ❌ ลบผู้ใช้งาน DELETE /api/users/:id
 const deleteUser = async (user) => {
   const isConfirmed = confirm(
