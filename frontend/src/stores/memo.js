@@ -11,13 +11,26 @@ export const useMemoStore = defineStore('memo', () => {
     loading.value = true
     try {
       const { data } = await api.get('/memos', { params })
-      memos.value = data.data
-    } finally { loading.value = false }
+      // ✨ ปรับแก้: ถ้าหลังบ้านส่งตรงมาเป็น Array ให้รับด้วย data ทันที ถ้ายัดห่อมาค่อยใช้ data.data
+      // น้องใส่ดักแบบปลอดภัยไว้ให้: ถ้า data.data มีค่าให้ใช้ data.data ถ้าไม่มีให้ใช้ data ตรง ๆ เลยครับอ้าย
+      memos.value = data.data !== undefined ? data.data : data
+    } catch (error) {
+      console.error('Fetch Memos Error:', error)
+    } finally { 
+      loading.value = false 
+    }
   }
 
   async function fetchMemo(id) {
-    const { data } = await api.get(`/memos/${id}`)
-    current.value = data.data
+    try {
+      const { data } = await api.get(`/memos/${id}`)
+      // ✨ ปรับแก้ดักโครงสร้าง object เหมือนกัน เพื่อให้เข้ากันได้กับโครงสร้าง API ของกลุ่มอ้าย
+      current.value = data.data !== undefined ? data.data : data
+    } catch (error) {
+      console.error('Fetch Memo Detail Error:', error)
+      current.value = null
+      throw error // โยนเออร์เรอร์เพื่อให้หน้าบ้านรู้และจัดการดีดหลบหน้าขาวได้
+    }
   }
 
   async function createMemo(payload) {

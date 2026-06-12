@@ -46,6 +46,11 @@ const router = createRouter({
       component: () => import('../views/AdminUsersView.vue'),
       meta: { requiresAuth: true, adminOnly: true }
     },
+    // ✨ เติมพาร์ทดักจับบั๊กไว้ตรงนี้ครับอ้าย! ถ้าหลุดไปหน้าไม่มีอยู่จริง (เช่น /memos/1) จะดีดกลับหน้าหลักทันที ไม่ปล่อยให้จอขาว
+    {
+      path: '/:pathMatch(.*)*',
+      redirect: '/memos'
+    }
   ],
 })
 
