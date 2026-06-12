@@ -35,8 +35,9 @@ exports.getAll = async (req, res) => {
 // สร้างผู้ใช้ใหม่ (เวอร์ชันแกะรอย Error 500)
 exports.create = async (req, res) => {
   try {
+     console.log("📥 req.body:", req.body) 
     const { full_name, email, password, role, department } = req.body
-
+    
     if (!full_name || !email || !password) {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูล ชื่อ-นามสกุล, อีเมล และรหัสผ่าน ให้ครบถ้วน' })
     }
@@ -46,7 +47,7 @@ exports.create = async (req, res) => {
       .from('profiles')
       .select('email')
       .eq('email', email)
-      .single()
+      .maybeSingle()
 
     if (existingUser) {
       return res.status(400).json({ error: 'อีเมลนี้ถูกใช้งานในระบบแล้ว' })
