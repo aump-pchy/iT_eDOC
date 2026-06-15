@@ -20,12 +20,8 @@
           <input v-model="email" type="email"
             placeholder="your@email.com"
             @keyup.enter="handleLogin"
-<<<<<<< HEAD
-             />
-=======
             :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition" />
->>>>>>> origin/feature/backend-users
         </div>
 
         <div>
@@ -33,12 +29,8 @@
           <input v-model="password" type="password"
             placeholder="••••••••"
             @keyup.enter="handleLogin"
-<<<<<<< HEAD
-             />
-=======
             :class="errorMsg ? 'border-red-400 focus:ring-red-300' : 'border-gray-200 focus:ring-pink-300'"
             class="w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 transition" />
->>>>>>> origin/feature/backend-users
         </div>
 
         <p v-if="errorMsg" class="text-red-500 text-xs text-center">{{ errorMsg }}</p>
@@ -54,8 +46,8 @@
         >
           <span v-if="loading" class="flex items-center justify-center gap-2">
             <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
             </svg>
             กำลังเข้าสู่ระบบ...
           </span>
