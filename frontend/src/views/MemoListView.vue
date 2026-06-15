@@ -106,7 +106,7 @@
                   <div class="flex flex-row items-center justify-center gap-2">
                     
                     <router-link 
-                      :to="`/memo-detail/${memo.id}`" 
+                      :to="`/memos/${memo.id}`" 
                       class="bg-sky-50 hover:bg-sky-100 text-sky-700 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
                     >
                       รายละเอียด

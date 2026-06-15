@@ -29,10 +29,17 @@
         DEVELOPERS TEAM
       </h1>
       <div class="h-1.5 w-32 bg-gradient-to-r from-transparent via-white/60 to-transparent mx-auto mt-4 rounded-full shadow-sm animate-pulse"></div>
-      <p class="text-white/90 text-xs md:text-sm font-bold mt-3 tracking-widest uppercase bg-black/10 backdrop-blur-md px-4 py-1.5 rounded-full inline-block border border-white/20 shadow-sm">
+      <p class="text-white/90 text-xs md:text-sm font-bold mt-3 tracking-widest uppercase bg-black/10 backdrop-blur-md px-4  rounded-full inline-block border border-white/20 shadow-sm">
         แผนกวิชาเทคโนโลยีสารสนเทศ และ เทคโนโลยีปัญญาประดิษฐ์ • วิทยาลัยเทคนิคเลย
       </p>
     </div>
+
+    <div class="text-center">
+  <p class="text-white/90 text-xs md:text-sm font-bold tracking-widest uppercase bg-black/10 backdrop-blur-md px-4  rounded-full inline-block border border-white/20 shadow-sm">
+    Trainnee GEN.5 of หจก.พิชญะ Service Everything Co., Ltd. • 2026
+  </p>
+</div>
+    
 
     <!-- ─── 🎯 SECTION 1: FAST WARP AVATARS ─── -->
     <div class="relative max-w-4xl mx-auto px-4 mb-24 z-10">
