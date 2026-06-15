@@ -5,11 +5,11 @@
 const supabase = require('../config/db')
 const multer   = require('multer')
 
-// ── multer: เก็บไฟล์ใน memory ก่อนส่งต่อ Supabase ──
+// ── multer: สำหรับหิ้วไฟล์ PDF เข้า Memory ──
 const upload = multer({ storage: multer.memoryStorage() })
 exports.uploadMiddleware = upload.single('pdf')
 
-// ── Helper: รันเลข memo อัตโนมัติ ────────────
+// ── Helper: สร้างเลขที่บันทึกข้อความ ────────────
 async function generateMemoNumber() {
   const yearBE = new Date().getFullYear() + 543
   let { data: seqData, error: fetchError } = await supabase
@@ -78,7 +78,7 @@ exports.create = async (req, res) => {
   try {
     const { subject, recipient, operator, content, memo_number } = req.body
     if (!subject || !recipient || !operator) {
-      return res.status(400).json({ message: 'กรุณากรอกข้อมูล ชื่อเรื่อง, เรียนถึง และผู้ดำเนินการ ให้ครบถ้วน' })
+      return res.status(400).json({ message: 'กรุณากรอกข้อมูลให้ครบถ้วน' })
     }
 
     let finalMemoNumber = memo_number
@@ -154,43 +154,73 @@ exports.remove = async (req, res) => {
 }
 
 // ── POST /api/memos/:id/upload-pdf ───────────
-// รับไฟล์ PDF → อัปโหลด Supabase Storage → อัปเดต status + pdf_url
 exports.uploadPdf = async (req, res) => {
   try {
     const { id } = req.params
 
-    if (!req.file) return res.status(400).json({ error: 'ไม่พบไฟล์ PDF ที่ส่งมา' })
+    if (!req.file) {
+      return res.status(400).json({ error: 'หน้าบ้านไม่ได้แนบไฟล์มา หรือคีย์ไฟล์ไม่ตรง (ต้องชื่อ pdf)' })
+    }
 
-    // ตรวจสอบว่ามี memo นี้อยู่จริง
+    // 1. ตรวจสอบว่าแถว ID นี้มีอยู่จริงไหม
     const { data: memo, error: fetchError } = await supabase
-      .from('memos').select('*').eq('id', id).single()
-    if (fetchError || !memo) return res.status(404).json({ error: 'ไม่พบบันทึกข้อความนี้' })
+      .from('memos')
+      .select('*')
+      .eq('id', id)
+      .single()
 
-    // อัปโหลดไฟล์ไป Supabase Storage bucket: "memos-pdf"
+    if (fetchError || !memo) {
+      return res.status(404).json({ error: 'ไม่พบไอดีเอกสารบันทึกข้อความนี้ในฐานข้อมูล' })
+    }
+
     const fileName = `${id}_${Date.now()}.pdf`
+
+    // 2. อัปโหลดไฟล์เข้า Supabase Storage บักเก็ต memos-pdf
+    if (!supabase.storage) {
+      return res.status(500).json({ error: 'อินสแตนซ์ Supabase หลังบ้านไม่มีฟังก์ชัน .storage กรุณาเช็กไฟล์ตั้งค่า db' })
+    }
+
     const { error: uploadError } = await supabase.storage
       .from('memos-pdf')
       .upload(fileName, req.file.buffer, {
         contentType: 'application/pdf',
         upsert: true
       })
-    if (uploadError) throw uploadError
 
-    // ดึง Public URL
+    if (uploadError) {
+      console.error('รายละเอียดความผิดพลาดจาก Supabase Storage:', uploadError)
+      return res.status(500).json({ 
+        error: 'เกิดปัญหาในขณะอัปโหลดไฟล์ไป Storage กรุณาตรวจสอบว่าคุณได้สร้าง Bucket ชื่อ memos-pdf บนเว็บ Supabase แล้วหรือยัง' 
+      })
+    }
+
+    // 3. ดึงลิงก์ไฟล์สาธารณะออกมา
     const { data: urlData } = supabase.storage.from('memos-pdf').getPublicUrl(fileName)
+    const filePublicUrl = urlData?.publicUrl || urlData
 
-    // อัปเดต memo: status = 'done', pdf_url = ...
+    // 4. บันทึกกลับลงตาราง memos ทุกคอลัมน์ที่เกี่ยวข้องเพื่อความชัวร์
     const { data: updatedMemo, error: updateError } = await supabase
       .from('memos')
-      .update({ status: 'done', pdf_url: urlData.publicUrl })
+      .update({ 
+        status: 'completed', // ปรับเปลี่ยนสถานะในตาราง
+        pdf_url: filePublicUrl,
+        file_url: filePublicUrl,
+        file_path: fileName
+      })
       .eq('id', id)
       .select()
       .single()
-    if (updateError) throw updateError
 
-    res.status(200).json({ message: 'อัปโหลด PDF และอัปเดตสถานะสำเร็จ', data: updatedMemo })
+    if (updateError) {
+      console.error('รายละเอียดความผิดพลาดจากขั้นตอนอัปเดต Table Memos:', updateError)
+      return res.status(500).json({ error: 'ไฟล์เข้า Storage สำเร็จแล้ว แต่ติดขัดขั้นตอนอัปเดตข้อมูลกลับลงตาราง' })
+    }
+
+    // ส่งสถานะกลับไปหน้าบ้าน Vue ให้รับรู้อย่างสวยงาม
+    return res.status(200).json({ message: 'บันทึกเอกสารและอัปโหลด PDF เรียบร้อยแล้ว', data: updatedMemo })
+
   } catch (err) {
-    console.error('uploadPdf error:', err)
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการอัปโหลด PDF' })
+    console.error('จุดขัดข้องภาพรวมเซิร์ฟเวอร์:', err)
+    return res.status(500).json({ error: 'เกิดข้อผิดพลาดภายในระบบเซิร์ฟเวอร์หลังบ้าน' })
   }
 }

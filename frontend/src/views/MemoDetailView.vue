@@ -2,7 +2,6 @@
   <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 md:pt-20">
     <div class="max-w-3xl mx-auto">
 
-      <!-- Loading State -->
       <div v-if="loading" class="bg-white p-10 rounded-xl shadow-md border border-gray-200 flex flex-col items-center justify-center gap-3 text-gray-500">
         <svg class="animate-spin h-8 w-8 text-blue-400" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -11,7 +10,6 @@
         <p class="text-sm">กำลังโหลดข้อมูลบันทึกข้อความ...</p>
       </div>
 
-      <!-- Error State -->
       <div v-else-if="fetchError" class="bg-white p-10 rounded-xl shadow-md border border-red-200 text-center">
         <p class="text-red-500 font-medium mb-1">{{ fetchError }}</p>
         <p class="text-sm text-gray-400 mb-4">ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่</p>
@@ -20,10 +18,8 @@
         </button>
       </div>
 
-      <!-- Main Content -->
       <div v-else class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
 
-        <!-- Header -->
         <div class="border-b border-gray-200 pb-4 mb-6 flex justify-between items-center">
           <div>
             <h1 class="text-2xl font-bold text-gray-800">
@@ -33,13 +29,12 @@
           </div>
           <span
             :class="statusBadgeClass"
-            class="text-xs font-semibold px-3 py-1 rounded-full border"
+            class="text-xs font-semibold px-3 py-1 rounded-full border uppercase"
           >
             {{ memo.status }}
           </span>
         </div>
 
-        <!-- Fields -->
         <div class="space-y-4">
 
           <div class="grid grid-cols-1 md:grid-cols-4 gap-2 items-center">
@@ -82,14 +77,12 @@
             </div>
           </div>
 
-          <!-- PDF Section -->
           <div class="mt-8 pt-6 border-t border-gray-200">
             <label class="block text-base font-semibold text-gray-800 mb-3">
               เนื้อหาข้อความรายละเอียดภายใน
             </label>
 
-            <!-- Upload zone (กำลังดำเนินการ) -->
-            <div v-if="memo.status === 'กำลังดำเนินการ'"
+            <div v-if="memo.status === 'กำลังดำเนินการ' || memo.status === 'draft' || !displayPdfUrl"
               class="w-full p-8 border-2 border-dashed border-yellow-300 rounded-xl bg-yellow-50 flex flex-col justify-center items-center text-center">
               <svg class="h-12 w-12 text-yellow-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
@@ -106,7 +99,6 @@
                 class="block w-full max-w-xs text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-yellow-100 file:text-yellow-700 hover:file:bg-yellow-200 cursor-pointer disabled:opacity-50"
               />
 
-              <!-- Upload Progress -->
               <div v-if="uploading" class="mt-4 flex items-center gap-2 text-sm text-yellow-700">
                 <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -116,15 +108,13 @@
               </div>
             </div>
 
-            <!-- PDF Viewer (ดำเนินการแล้ว) -->
-            <div v-else-if="memo.status === 'ดำเนินการแล้ว'"
+            <div v-else
               class="w-full h-[550px] border border-gray-300 rounded-xl bg-gray-100 shadow-inner overflow-hidden relative">
-              <iframe :src="memo.pdf_url" width="100%" height="100%"
+              <iframe :src="displayPdfUrl" width="100%" height="100%"
                 class="w-full h-full bg-white rounded-xl"></iframe>
             </div>
           </div>
 
-          <!-- Toast Notification -->
           <transition name="fade">
             <div v-if="toast.show"
               :class="toast.type === 'success' ? 'bg-green-50 border-green-300 text-green-800' : 'bg-red-50 border-red-300 text-red-800'"
@@ -139,7 +129,6 @@
             </div>
           </transition>
 
-          <!-- Action Buttons -->
           <div class="flex justify-between items-center pt-4 border-t border-gray-100 mt-6">
             <button type="button" @click="goBack"
               class="px-6 py-2 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 flex items-center space-x-2 transition duration-150">
@@ -166,7 +155,7 @@
               </button>
 
               <button
-                v-if="memo.status === 'กำลังดำเนินการ'"
+                v-if="memo.status === 'กำลังดำเนินการ' || memo.status === 'draft'"
                 type="button"
                 @click="goToEdit"
                 class="px-5 py-2 rounded-xl shadow-sm text-sm font-medium text-white bg-amber-500 hover:bg-amber-600 transition duration-150 flex items-center space-x-1">
@@ -188,25 +177,25 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
-// ─── Config ───────────────────────────────
-// เปลี่ยน BASE_URL ให้ตรงกับ Express server ของคุณ
+// ─── การตั้งค่า API ───────────────────────────
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000'
 
-// ─── Router ───────────────────────────────
+// ─── ตัวช่วยจัดการเส้นทาง ───────────────────────────
 const router = useRouter()
 const route  = useRoute()
 
-// ─── State ────────────────────────────────
-const memo      = ref({})
-const loading   = ref(true)
-const uploading = ref(false)
-const deleting  = ref(false)
+// ─── ตัวแปรเก็บสถานะการทำงานภายในหน้าจอ ─────────────────
+const memo       = ref({})
+const localPdf   = ref(null) 
+const loading    = ref(true)
+const uploading  = ref(false)
+const deleting   = ref(false)
 const fetchError = ref(null)
-const pdfInput  = ref(null)
+const pdfInput   = ref(null)
 
 const toast = ref({ show: false, type: 'success', message: '' })
 
-// ─── Computed ─────────────────────────────
+// ─── ฟังก์ชันคํานวณตัวแปรอัตโนมัติ ─────────────────────
 const formattedThaiDate = computed(() => {
   if (!memo.value.created_at) return 'ไม่มีข้อมูลวันที่'
   return new Date(memo.value.created_at).toLocaleDateString('th-TH', {
@@ -215,17 +204,23 @@ const formattedThaiDate = computed(() => {
 })
 
 const statusBadgeClass = computed(() => {
-  if (memo.value.status === 'ดำเนินการแล้ว') return 'bg-green-100 text-green-800'
-  return 'bg-yellow-100 text-yellow-800'
+  if (memo.value.status === 'ดำเนินการแล้ว' || memo.value.status === 'completed') return 'bg-green-100 text-green-800'
+  if (memo.value.status === 'draft' || memo.value.status === 'กำลังดำเนินการ') return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+  return 'bg-amber-100 text-amber-800'
 })
 
-// ─── Toast Helper ─────────────────────────
+const displayPdfUrl = computed(() => {
+  if (localPdf.value) return localPdf.value
+  return memo.value.pdf_url || memo.value.pdf_path || memo.value.file_url || null
+})
+
+// ─── ฟังก์ชันโชว์แจ้งเตือนเด้งขึ้นมา ─────────────────────
 function showToast(message, type = 'success') {
   toast.value = { show: true, type, message }
   setTimeout(() => { toast.value.show = false }, 4000)
 }
 
-// ─── GET /api/memos/:id ───────────────────
+// ─── ดึงข้อมูลบันทึกข้อความเดี่ยวๆ จากหลังบ้าน ───────────────────
 async function fetchMemo() {
   loading.value   = true
   fetchError.value = null
@@ -237,7 +232,8 @@ async function fetchMemo() {
       const err = await res.json()
       throw new Error(err.error || 'โหลดข้อมูลไม่สำเร็จ')
     }
-    memo.value = await res.json()
+    const data = await res.json()
+    memo.value = data.data !== undefined ? data.data : data
   } catch (err) {
     fetchError.value = err.message
   } finally {
@@ -245,33 +241,28 @@ async function fetchMemo() {
   }
 }
 
-// ─── POST (upload PDF + update status) ───
-// หมายเหตุ: memoController ไม่มี endpoint อัปโหลด PDF โดยตรง
-// จึงใช้ PUT /api/memos/:id เพื่ออัปเดต status เป็น "ดำเนินการแล้ว"
-// และส่ง pdf_url (ถ้า backend มี storage ให้ขยาย formData ได้เลย)
+// ─── แพ็กไฟล์และข้อความเป็น FormData ยิง PUT ไปหาเซิร์ฟเวอร์หลังบ้าน ───
 async function handlePdfUpload(event) {
   const file = event.target.files[0]
   if (!file) return
 
   uploading.value = true
   try {
-    // ── ถ้า backend มี storage / Supabase Storage ──
-    // ให้ upload file ก่อน แล้วเอา URL มาใส่ pdf_url
-    // const pdfUrl = await uploadToStorage(file)
-    //
-    // ── สำหรับตอนนี้: preview local + อัปเดต status ──
     const localUrl = URL.createObjectURL(file)
+
+    // 🚀 แปลงร่างเป็นกล่อง FormData เพื่อให้ขนส่งไฟล์ PDF ตัวจริงไปพร้อมข้อความได้
+    const formData = new FormData()
+    formData.append('pdf_file', file) 
+    formData.append('subject', memo.value.subject || '')
+    formData.append('recipient', memo.value.recipient || '')
+    formData.append('operator', memo.value.operator || '')
+    formData.append('content', memo.value.content || '')
+    formData.append('status', 'ดำเนินการแล้ว') // ส่งค่าไปอัปเดตตารางเป็นคำไทยตรงๆ
 
     const res = await fetch(`${BASE_URL}/api/memos/${memo.value.id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      body: JSON.stringify({
-        subject:   memo.value.subject,
-        recipient: memo.value.recipient,
-        operator:  memo.value.operator,
-        content:   memo.value.content,
-        status:    'ดำเนินการแล้ว'
-      })
+      headers: { ...authHeaders() }, // ห้ามใส่ Content-Type: application/json เด็ดขาดนะอ้าย เบราว์เซอร์จะจัดการให้เอง
+      body: formData 
     })
 
     if (!res.ok) {
@@ -280,18 +271,20 @@ async function handlePdfUpload(event) {
     }
 
     const updated = await res.json()
-    // รับข้อมูลใหม่จาก backend แล้ว merge pdf_url เข้าไปด้วย
-    memo.value = { ...updated.data, pdf_url: localUrl }
+    const updatedData = updated.data !== undefined ? updated.data : updated
+    
+    memo.value = updatedData
+    localPdf.value = localUrl
     showToast('อัปโหลดและอัปเดตสถานะเป็น "ดำเนินการแล้ว" เรียบร้อยแล้ว')
   } catch (err) {
     showToast(err.message, 'error')
-    if (pdfInput.value) pdfInput.value.value = '' // reset input
+    if (pdfInput.value) pdfInput.value.value = '' 
   } finally {
     uploading.value = false
   }
 }
 
-// ─── DELETE /api/memos/:id ────────────────
+// ─── ลบข้อมูลบันทึก ────────────────────────
 async function cancelMemo() {
   if (!confirm('คุณแน่ใจใช่ไหมว่าต้องการ "ยกเลิกและลบ" ข้อมูลบันทึกข้อความรายการนี้ทิ้ง?')) return
 
@@ -314,18 +307,15 @@ async function cancelMemo() {
   }
 }
 
-// ─── Navigation ───────────────────────────
+// ─── ป้อนสิทธิ์และ Token ติดไปด้วย ─────────────────────
 const goBack   = () => router.push('/memos')
 const goToEdit = () => router.push(`/memos/${memo.value.id}/edit`)
 
-// ─── Auth Helper ──────────────────────────
-// ดึง token จาก localStorage (ปรับตาม auth ที่ใช้ได้เลย)
 function authHeaders() {
   const token = localStorage.getItem('token')
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-// ─── Lifecycle ────────────────────────────
 onMounted(fetchMemo)
 </script>
 

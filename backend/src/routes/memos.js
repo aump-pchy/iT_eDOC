@@ -25,4 +25,7 @@ router.put('/:id', controller.update)
 // DELETE /api/memos/:id → ลบ (admin เท่านั้น)
 router.delete('/:id', /*verifyAdmin,*/ controller.remove)
 
+// 🔥 วางตรงนี้: เปิดเส้นทาง POST /api/memos/:id/upload-pdf สำหรับการอัปโหลดไฟล์ PDF
+router.post('/:id/upload-pdf', controller.uploadMiddleware, controller.uploadPdf)
+
 module.exports = router
