@@ -8,7 +8,13 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: () => import('../views/LoginView.vue'),
-      meta: { public: true } // หน้าสาธารณะ ไม่ต้องล็อกอินก็เข้าได้
+      meta: { public: true }
+    },
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('../views/HomeView.vue'),
+      // ← ลบ public: true ออก เพราะต้อง login ก่อน
     },
     {
       path: '/memos',
@@ -21,7 +27,7 @@ const router = createRouter({
       component: () => import('../views/MemoFormView.vue'),
     },
     {
-      path: '/memo-detail/:id',
+      path: '/memos/:id',
       name: 'memo-detail',
       component: () => import('../views/MemoDetailView.vue'),
     },
@@ -29,17 +35,17 @@ const router = createRouter({
       path: '/memos/:id/edit',
       name: 'memo-edit',
       component: () => import('../views/MemoFormView.vue'),
-    },  
-    { 
-      path: '/', 
-      name: 'home', 
-      component: () => import('../views/HomeView.vue'),
-      
     },
     {
       path: '/admin/users',
       name: 'admin-users',
       component: () => import('../views/AdminUsersView.vue'),
+      meta: { adminOnly: true }
+    },
+    {
+    path: '/developers',
+    name: 'developers',
+    component: () => import('../views/DeveloperView.vue'),
     },
     // ✨ เติมพาร์ทดักจับบั๊กไว้ตรงนี้ครับอ้าย! ถ้าหลุดไปหน้าไม่มีอยู่จริง (เช่น /memos/1) จะดีดกลับหน้าหลักทันที ไม่ปล่อยให้จอขาว
     {
@@ -49,22 +55,14 @@ const router = createRouter({
   ],
 })
 
-// 👥 สเต็ปที่ 5: เปิดใช้งานด่านตรวจความปลอดภัย (Route Guard) แบบสมบูรณ์
 router.beforeEach((to, _, next) => {
-  // ต้องเรียกเรียกใช้งาน useAuthStore() ด้านในนี้เท่านั้น เพื่อป้องกันปัญหา Store โหลดไม่ทัน
   const auth = useAuthStore()
-  
-  // 1. ถ้าหน้าที่จะไปไม่ได้ใส่ meta: { public: true } และผู้ใช้ยังไม่ได้ล็อกอิน ให้เตะกลับไปหน้า Login
-  if (!to.meta.public && !auth.isLoggedIn) {
-    return next('/login')
-  }
-  
-  // 2. ถ้าผู้ใช้ล็อกอินค้างไว้ในระบบอยู่แล้ว แต่อุตริพิมพ์ URL จะกลับมาหน้า login ให้ดันกลับไปหน้าทะเบียนหนังสือ (/memos)
-  if (to.name === 'login' && auth.isLoggedIn) {
-    return next('/')
-  }
-  
-  next() // ปล่อยผ่านไปยังหน้าปลายทางได้ปกติ
+
+  if (!to.meta.public && !auth.isLoggedIn) return next('/login')
+  if (to.name === 'login' && auth.isLoggedIn) return next('/')
+  if (to.meta.adminOnly && !auth.isAdmin) return next('/memos')
+
+  next()
 })
 
 export default router
