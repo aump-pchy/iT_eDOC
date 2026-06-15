@@ -11,7 +11,7 @@ export const useMemoStore = defineStore('memo', () => {
     loading.value = true
     try {
       // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
-      const { data } = await api.get('/api/memos', { params })
+      const { data } = await api.get('/memos', { params })
       memos.value = data.data !== undefined ? data.data : data
     } catch (error) {
       console.error('Fetch Memos Error:', error)
@@ -23,7 +23,7 @@ export const useMemoStore = defineStore('memo', () => {
   async function fetchMemo(id) {
     try {
       // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
-      const { data } = await api.get(`/api/memos/${id}`)
+      const { data } = await api.get(`/memos/${id}`)
       current.value = data.data !== undefined ? data.data : data
     } catch (error) {
       console.error('Fetch Memo Detail Error:', error)
@@ -34,19 +34,19 @@ export const useMemoStore = defineStore('memo', () => {
 
   async function createMemo(payload) {
     // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
-    const { data } = await api.post('/api/memos', payload)
+    const { data } = await api.post('/memos', payload)
     return data
   }
 
   async function updateMemo(id, payload) {
     // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
-    const { data } = await api.put(`/api/memos/${id}`, payload)
+    const { data } = await api.put(`/memos/${id}`, payload)
     return data
   }
 
   async function deleteMemo(id) {
     // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
-    await api.delete(`/api/memos/${id}`)
+    await api.delete(`/memos/${id}`)
     memos.value = memos.value.filter(m => m.id !== id)
   }
 

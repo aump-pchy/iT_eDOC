@@ -15,21 +15,21 @@ async function generateMemoNumber() {
   let { data: seqData, error: fetchError } = await supabase
     .from('memo_sequences')
     .select('*')
-    .eq('year', yearBE)
+    .eq('year_be', yearBE)
     .single()
 
   let nextSeq = 1
   if (!seqData) {
     const { error: insertError } = await supabase
       .from('memo_sequences')
-      .insert([{ year: yearBE, last_seq: 1 }])
+      .insert([{ year_be: yearBE, last_seq: 1 }])
     if (insertError) throw insertError
   } else {
     nextSeq = seqData.last_seq + 1
     const { error: updateError } = await supabase
       .from('memo_sequences')
       .update({ last_seq: nextSeq })
-      .eq('year', yearBE)
+      .eq('year_be', yearBE)
     if (updateError) throw updateError
   }
   return `ทส.${nextSeq}/${yearBE}`
@@ -108,7 +108,7 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
   try {
     const { id } = req.params
-    const { subject, recipient, operator, content } = req.body
+    const { subject, recipient, operator, content, status } = req.body
 
     const { data: memos, error: fetchError } = await supabase
       .from('memos').select('*').eq('id', id)
@@ -116,13 +116,23 @@ exports.update = async (req, res) => {
     if (fetchError || !memos || memos.length === 0)
       return res.status(404).json({ error: 'ไม่พบเอกสารที่ต้องการแก้ไข' })
 
-    const memo = memos[0]
-    if (memo.created_by !== req.user?.id && req.user?.role !== 'admin')
-      return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ไขเอกสารฉบับนี้' })
+   if (req.user) {
+      const memo = memos[0]
+      if (memo.created_by !== req.user.id && req.user.role !== 'admin')
+        return res.status(403).json({ error: 'ไม่มีสิทธิ์แก้ไขเอกสารฉบับนี้' })
+    }
+
+    // ── แก้: เพิ่ม status เข้าไปใน update ──
+    const updates = {}
+    if (subject   !== undefined) updates.subject   = subject
+    if (recipient !== undefined) updates.recipient = recipient
+    if (operator  !== undefined) updates.operator  = operator
+    if (content   !== undefined) updates.content   = content
+    if (status    !== undefined) updates.status    = status
 
     const { data: updatedMemo, error: updateError } = await supabase
       .from('memos')
-      .update({ subject, recipient, operator, content })
+      .update(updates)
       .eq('id', id)
       .select()
       .single()
@@ -157,7 +167,8 @@ exports.remove = async (req, res) => {
 exports.uploadPdf = async (req, res) => {
   try {
     const { id } = req.params
-
+    console.log('uploadPdf called, id:', id)
+    console.log('file:', req.file)
     if (!req.file) {
       return res.status(400).json({ error: 'หน้าบ้านไม่ได้แนบไฟล์มา หรือคีย์ไฟล์ไม่ตรง (ต้องชื่อ pdf)' })
     }

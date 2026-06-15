@@ -225,7 +225,7 @@ async function fetchMemo() {
   loading.value   = true
   fetchError.value = null
   try {
-    const res = await fetch(`${BASE_URL}/api/memos/${route.params.id}`, {
+    const res = await fetch(`${BASE_URL}/memos/${route.params.id}`, {
       headers: authHeaders()
     })
     if (!res.ok) {
@@ -248,37 +248,28 @@ async function handlePdfUpload(event) {
 
   uploading.value = true
   try {
-    const localUrl = URL.createObjectURL(file)
-
-    // 🚀 แปลงร่างเป็นกล่อง FormData เพื่อให้ขนส่งไฟล์ PDF ตัวจริงไปพร้อมข้อความได้
     const formData = new FormData()
-    formData.append('pdf_file', file) 
-    formData.append('subject', memo.value.subject || '')
-    formData.append('recipient', memo.value.recipient || '')
-    formData.append('operator', memo.value.operator || '')
-    formData.append('content', memo.value.content || '')
-    formData.append('status', 'ดำเนินการแล้ว') // ส่งค่าไปอัปเดตตารางเป็นคำไทยตรงๆ
+    formData.append('pdf', file)  // ← แก้จาก 'pdf_file' เป็น 'pdf'
 
-    const res = await fetch(`${BASE_URL}/api/memos/${memo.value.id}`, {
-      method: 'PUT',
-      headers: { ...authHeaders() }, // ห้ามใส่ Content-Type: application/json เด็ดขาดนะอ้าย เบราว์เซอร์จะจัดการให้เอง
-      body: formData 
+    const res = await fetch(`${BASE_URL}/memos/${memo.value.id}/upload-pdf`, {  // ← แก้ endpoint
+      method: 'POST',  // ← แก้จาก PUT เป็น POST
+      headers: { ...authHeaders() },
+      body: formData
     })
 
     if (!res.ok) {
       const err = await res.json()
-      throw new Error(err.error || 'อัปเดตสถานะไม่สำเร็จ')
+      throw new Error(err.error || 'อัปโหลดไม่สำเร็จ')
     }
 
     const updated = await res.json()
     const updatedData = updated.data !== undefined ? updated.data : updated
-    
+
     memo.value = updatedData
-    localPdf.value = localUrl
     showToast('อัปโหลดและอัปเดตสถานะเป็น "ดำเนินการแล้ว" เรียบร้อยแล้ว')
   } catch (err) {
     showToast(err.message, 'error')
-    if (pdfInput.value) pdfInput.value.value = '' 
+    if (pdfInput.value) pdfInput.value.value = ''
   } finally {
     uploading.value = false
   }
@@ -290,7 +281,7 @@ async function cancelMemo() {
 
   deleting.value = true
   try {
-    const res = await fetch(`${BASE_URL}/api/memos/${memo.value.id}`, {
+    const res = await fetch(`${BASE_URL}/memos/${memo.value.id}`, {
       method: 'DELETE',
       headers: authHeaders()
     })
