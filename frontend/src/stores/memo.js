@@ -10,9 +10,8 @@ export const useMemoStore = defineStore('memo', () => {
   async function fetchMemos(params = {}) {
     loading.value = true
     try {
-      const { data } = await api.get('/memos', { params })
-      // ✨ ปรับแก้: ถ้าหลังบ้านส่งตรงมาเป็น Array ให้รับด้วย data ทันที ถ้ายัดห่อมาค่อยใช้ data.data
-      // น้องใส่ดักแบบปลอดภัยไว้ให้: ถ้า data.data มีค่าให้ใช้ data.data ถ้าไม่มีให้ใช้ data ตรง ๆ เลยครับอ้าย
+      // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
+      const { data } = await api.get('/api/memos', { params })
       memos.value = data.data !== undefined ? data.data : data
     } catch (error) {
       console.error('Fetch Memos Error:', error)
@@ -23,28 +22,31 @@ export const useMemoStore = defineStore('memo', () => {
 
   async function fetchMemo(id) {
     try {
-      const { data } = await api.get(`/memos/${id}`)
-      // ✨ ปรับแก้ดักโครงสร้าง object เหมือนกัน เพื่อให้เข้ากันได้กับโครงสร้าง API ของกลุ่มอ้าย
+      // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
+      const { data } = await api.get(`/api/memos/${id}`)
       current.value = data.data !== undefined ? data.data : data
     } catch (error) {
       console.error('Fetch Memo Detail Error:', error)
       current.value = null
-      throw error // โยนเออร์เรอร์เพื่อให้หน้าบ้านรู้และจัดการดีดหลบหน้าขาวได้
+      throw error 
     }
   }
 
   async function createMemo(payload) {
-    const { data } = await api.post('/memos', payload)
+    // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
+    const { data } = await api.post('/api/memos', payload)
     return data
   }
 
   async function updateMemo(id, payload) {
-    const { data } = await api.put(`/memos/${id}`, payload)
+    // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
+    const { data } = await api.put(`/api/memos/${id}`, payload)
     return data
   }
 
   async function deleteMemo(id) {
-    await api.delete(`/memos/${id}`)
+    // 🚀 [ปรับแก้]: เติม /api เข้าไปข้างหน้า
+    await api.delete(`/api/memos/${id}`)
     memos.value = memos.value.filter(m => m.id !== id)
   }
 
