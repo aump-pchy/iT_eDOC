@@ -15,12 +15,8 @@
             ชื่อ-สกุล
           </label>
 
-          <input
-            type="text"
-            v-model="form.name"
-            placeholder="กรอกชื่อ"
-            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
-          />
+          <input type="text" v-model="form.name" placeholder="กรอกชื่อ"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm" />
         </div>
 
         <div class="flex items-center gap-8">
@@ -28,12 +24,8 @@
             ตำแหน่ง
           </label>
 
-          <input
-            type="text"
-            v-model="form.position"
-            placeholder="กรอกตำแหน่ง"
-            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
-          />
+          <input type="text" v-model="form.position" placeholder="กรอกตำแหน่ง"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm" />
         </div>
 
         <div class="flex items-center gap-8">
@@ -41,12 +33,8 @@
             อีเมล
           </label>
 
-          <input
-            type="email"
-            v-model="form.email"
-            placeholder="example@email.com"
-            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
-          />
+          <input type="email" v-model="form.email" placeholder="example@email.com"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm" />
         </div>
 
         <div class="flex items-center gap-8">
@@ -54,12 +42,8 @@
             รหัสผ่าน
           </label>
 
-          <input
-            type="password"
-            v-model="form.password"
-            placeholder="********"
-            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm"
-          />
+          <input type="password" v-model="form.password" placeholder="********"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm" />
         </div>
 
         <div class="flex items-center gap-8">
@@ -67,10 +51,8 @@
             สิทธิการใช้งาน
           </label>
 
-          <select
-            v-model="form.role"
-            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm cursor-pointer"
-          >
+          <select v-model="form.role"
+            class="flex-1 border border-gray-400 rounded-xl p-2.5 bg-white text-black font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm cursor-pointer">
             <option value="" disabled selected>เลือกสิทธิการใช้งาน</option>
             <option value="admin">Admin</option>
             <option value="user">User</option>
@@ -78,19 +60,14 @@
         </div>
 
         <div class="flex justify-end gap-3 pt-4">
-          <button
-            v-if="isEditing"
-            @click="cancelEdit"
-            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-300 transition"
-          >
+          <button v-if="isEditing" @click="cancelEdit"
+            class="bg-gray-200 text-gray-700 px-6 py-3 rounded-xl hover:bg-gray-300 transition">
             ยกเลิก
           </button>
 
-          <button
-            @click="submitForm"
+          <button @click="submitForm"
             :class="isEditing ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-900'"
-            class="text-white p-2 px-6 rounded-xl transition font-bold"
-          >
+            class="text-white p-2 px-6 rounded-xl transition font-bold">
             {{ isEditing ? 'บันทึกการแก้ไข' : 'บันทึกข้อมูล' }}
           </button>
         </div>
@@ -98,18 +75,15 @@
       </div>
 
       <div class="mt-14">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 pb-2 border-b border-gray-100">
+        <div
+          class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 pb-2 border-b border-gray-100">
           <div class="flex items-center gap-4 w-full sm:w-auto flex-1">
             <h2 class="text-xl font-semibold text-gray-800 whitespace-nowrap">
               รายชื่อผู้ใช้งาน
             </h2>
-            
-            <input
-              type="text"
-              v-model="searchQuery"
-              placeholder=" ค้นหาด้วย ชื่อ, อีเมล หรือสิทธิ"
-              class="flex-1 max-w-md border border-gray-300 rounded-xl px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition text-sm"
-            />
+
+            <input type="text" v-model="searchQuery" placeholder=" ค้นหาด้วย ชื่อ, อีเมล หรือสิทธิ"
+              class="flex-1 max-w-md border border-gray-300 rounded-xl px-4 py-2 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 transition text-sm" />
           </div>
 
           <span class="text-sm text-gray-400 whitespace-nowrap self-end sm:self-center">
@@ -117,28 +91,21 @@
           </span>
         </div>
 
-        <div
-          v-if="filteredUsers.length === 0"
-          class="text-center py-10 bg-gray-100 rounded-xl border border-gray-100 text-gray-500"
-        >
+        <div v-if="filteredUsers.length === 0"
+          class="text-center py-10 bg-gray-100 rounded-xl border border-gray-100 text-gray-500">
           ไม่พบข้อมูลผู้ใช้งานที่ตรงตามเงื่อนไข
         </div>
 
         <div v-else class="space-y-4">
-          <div
-            v-for="user in filteredUsers"
-            :key="user.id"
-            class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl p-5 hover:bg-gray-100 transition"
-          >
+          <div v-for="user in filteredUsers" :key="user.id"
+            class="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-2xl p-5 hover:bg-gray-100 transition">
             <div class="space-y-1">
               <div class="flex items-center gap-3">
                 <h3 class="font-medium text-gray-800">
                   {{ user.name }}
                 </h3>
-                <span
-                  :class="user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-200 text-gray-700'"
-                  class="text-xs px-2.5 py-0.5 rounded-full font-medium"
-                >
+                <span :class="user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-200 text-gray-700'"
+                  class="text-xs px-2.5 py-0.5 rounded-full font-medium">
                   {{ user.role }}
                 </span>
               </div>
@@ -151,18 +118,25 @@
               </p>
             </div>
 
-            <div class="flex gap-3">
-              <button
-                @click="editUser(user)"
-                class="px-4 py-2 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
-              >
+            <!-- เพิ่มใน user card -->
+            <div class="flex gap-2 flex-wrap">
+              <!-- Approve button (เฉพาะ pending) -->
+              <button v-if="user.status === 'pending'" @click="approveUser(user)"
+                class="px-3 py-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 text-sm transition">
+                อนุมัติ
+              </button>
+              <button @click="editUser(user)"
+                class="px-3 py-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 text-sm transition">
                 แก้ไข
               </button>
 
-              <button
-                @click="deleteUser(user)"
-                class="px-4 py-2 rounded-xl bg-red-50 text-red-500 hover:bg-red-100 transition"
-              >
+              <button @click="resetPassword(user)"
+                class="px-3 py-1.5 rounded-lg bg-yellow-50 text-yellow-600 hover:bg-yellow-100 text-sm transition">
+                Reset Password
+              </button>
+
+              <button @click="deleteUser(user)"
+                class="px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 text-sm transition">
                 ลบ
               </button>
             </div>
@@ -188,11 +162,12 @@ const fetchUsers = async () => {
   try {
     const { data } = await api.get('/users')
     users.value = data.map(u => ({
-      id:       u.id,
-      name:     u.full_name || '',
+      id: u.id,
+      name: u.full_name || '',
       position: u.department || '',
-      email:    u.email || '',
-      role:     u.role || 'user',
+      email: u.email || '',
+      role: u.role || 'user',
+      status: u.status ,
     }))
   } catch (err) {
     alert('ดึงข้อมูลไม่สำเร็จ: ' + err.message)
@@ -205,9 +180,9 @@ const filteredUsers = computed(() => {
   const q = searchQuery.value.trim().toLowerCase()
   if (!q) return users.value
   return users.value.filter(u =>
-    (u.name     && u.name.toLowerCase().includes(q)) ||
-    (u.email    && u.email.toLowerCase().includes(q)) ||
-    (u.role     && u.role.toLowerCase().includes(q)) ||
+    (u.name && u.name.toLowerCase().includes(q)) ||
+    (u.email && u.email.toLowerCase().includes(q)) ||
+    (u.role && u.role.toLowerCase().includes(q)) ||
     (u.position && u.position.toLowerCase().includes(q))
   )
 })
@@ -220,7 +195,7 @@ const resetForm = () => {
 
 const submitForm = async () => {
   if (!form.value.name || !form.value.position || !form.value.email || !form.value.role ||
-      (!isEditing.value && !form.value.password)) {
+    (!isEditing.value && !form.value.password)) {
     alert('กรุณากรอกข้อมูลให้ครบถ้วน')
     return
   }
@@ -232,11 +207,11 @@ const submitForm = async () => {
       alert('แก้ไขข้อมูลผู้ใช้งานสำเร็จ')
     } else {
       await api.post('/users', {
-        full_name:  form.value.name,
+        full_name: form.value.name,
         department: form.value.position,
-        email:      form.value.email,
-        password:   form.value.password,
-        role:       form.value.role,
+        email: form.value.email,
+        password: form.value.password,
+        role: form.value.role,
       })
       alert('เพิ่มผู้ใช้งานเข้าฐานข้อมูลสำเร็จ')
     }
@@ -263,6 +238,29 @@ const deleteUser = async (user) => {
     await fetchUsers()
   } catch (err) {
     alert('ลบข้อมูลผิดพลาด: ' + err.message)
+  }
+}
+
+// Approve user
+const approveUser = async (user) => {
+  try {
+    await api.put(`/users/${user.id}/approve`)
+    alert(`อนุมัติ ${user.name} สำเร็จ`)
+    await fetchUsers()
+  } catch (err) {
+    alert('เกิดข้อผิดพลาด: ' + err.message)
+  }
+}
+
+// Reset password
+const resetPassword = async (user) => {
+  const newPassword = prompt(`ตั้งรหัสผ่านใหม่สำหรับ "${user.name}":`)
+  if (!newPassword) return
+  try {
+    await api.put(`/users/${user.id}/reset-password`, { new_password: newPassword })
+    alert('รีเซ็ตรหัสผ่านสำเร็จ')
+  } catch (err) {
+    alert('เกิดข้อผิดพลาด: ' + err.message)
   }
 }
 </script>

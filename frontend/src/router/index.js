@@ -50,14 +50,14 @@ const router = createRouter({
     // ✨ เติมพาร์ทดักจับบั๊กไว้ตรงนี้ครับอ้าย! ถ้าหลุดไปหน้าไม่มีอยู่จริง (เช่น /memos/1) จะดีดกลับหน้าหลักทันที ไม่ปล่อยให้จอขาว
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/',
+      redirect: '/'
     },
     {
-      path: '/signup',
-      name: 'signup',
-      component: () => import('../views/SignupView.vue'),
-      meta: { public: true },
-    },
+  path: '/signup',
+  name: 'signup',
+  component: () => import('../views/SignupView.vue'),
+  meta: { public: true }
+},
   ],
 })
 

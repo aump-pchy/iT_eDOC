@@ -10,7 +10,7 @@ exports.getAll = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('profiles')
-      .select('id, full_name, email, role, department, created_at')
+      .select('id, full_name, email, role, department, created_at,status')
       .order('created_at', { ascending: false })
 
     if (error) return res.status(400).json({ error: error.message })
@@ -159,3 +159,37 @@ exports.remove = async (req, res) => {
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน', message: err.message })
   }
 }
+
+exports.approve = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ status: 'active' })
+      .eq('id', req.params.id)
+      .select().single()
+    if (error) throw error
+    res.json({ message: 'อนุมัติผู้ใช้สำเร็จ', data })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { new_password } = req.body
+    if (!new_password) return res.status(400).json({ error: 'กรุณาระบุรหัสผ่านใหม่' })
+
+    const bcrypt = require('bcryptjs')
+    const hashed = await bcrypt.hash(new_password, 10)
+
+    await supabase.from('profiles')
+      .update({ password: hashed })
+      .eq('id', req.params.id)
+
+    res.json({ message: 'รีเซ็ตรหัสผ่านสำเร็จ' })
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}
+
+
