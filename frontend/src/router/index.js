@@ -51,7 +51,13 @@ const router = createRouter({
     {
       path: '/:pathMatch(.*)*',
       redirect: '/'
-    }
+    },
+    {
+  path: '/signup',
+  name: 'signup',
+  component: () => import('../views/SignUpView.vue'),
+  meta: { public: true }
+},
   ],
 })
 
