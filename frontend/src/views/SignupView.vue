@@ -20,6 +20,11 @@
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400" />
         </div>
         <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">ตำแหน่ง</label>
+          <input v-model="form.department" type="text" placeholder="ครู/เจ้าหน้าที่/นักศึกษา"
+            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400" />
+        </div>
+        <div>
           <label class="block text-xs font-medium text-gray-500 mb-1">อีเมล</label>
           <input v-model="form.email" type="email" placeholder="your@email.com"
             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-rose-400" />

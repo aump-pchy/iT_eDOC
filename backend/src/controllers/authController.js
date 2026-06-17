@@ -184,8 +184,8 @@ exports.getMe = async (req, res) => {
 
 exports.signup = async (req, res) => {
   try {
-    const { full_name, email, password } = req.body
-    if (!full_name || !email || !password)
+    const { full_name, email, password, department } = req.body
+    if (!full_name || !email || !password || !department)
       return res.status(400).json({ error: 'กรุณากรอกข้อมูลให้ครบ' })
 
     const { data: existing } = await supabase
@@ -194,7 +194,7 @@ exports.signup = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10)
     await supabase.from('profiles')
-      .insert({ full_name, email, password: hashed, role: 'user', status: 'pending' })
+      .insert({ full_name, email, password: hashed, role: 'user', status: 'pending', department })
 
     res.status(201).json({ message: 'สมัครสมาชิกสำเร็จ รอ Admin อนุมัติ' })
   } catch (err) {
