@@ -1,54 +1,41 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-8 px-6 md:pt-20">
-    
+
     <div class="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-md border border-gray-200">
-      
+
       <div class="flex items-center justify-between mb-8 border-b pb-4">
         <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
           สร้างบันทึกข้อความใหม่
         </h1>
-        <button 
-          type="button"
-          @click="router.push('/memos')"
-          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors text-sm"
-        >
+        <button type="button" @click="router.push('/memos')"
+          class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors text-sm">
           ย้อนกลับ
         </button>
       </div>
 
       <div class="p-6 md:p-8 bg-white border border-gray-200 rounded-xl shadow-sm">
         <form @submit.prevent="handleSubmit" class="space-y-8">
-          
+
           <div class="flex flex-col md:flex-row md:items-start gap-2">
             <label class="w-full md:w-48 text-gray-800 font-semibold text-base md:pt-2.5">
               เลขที่ บันทึกข้อความ ทส.
             </label>
             <div class="flex-1 w-full">
               <div class="flex items-center gap-3">
-                
+
                 <span class="text-gray-800 font-bold text-base">ทส.</span>
 
-                <input 
-                  v-model="formData.memoSeq"
-                  type="text" 
-                  :disabled="loadingSeq"
-                  :class="[
-                    'w-32 p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm text-center disabled:bg-gray-100',
-                    errors.memoSeq ? 'border-red-500 focus:border-red-500' : ''
-                  ]"
-                  :placeholder="loadingSeq ? 'กำลังโหลด...' : 'เช่น 56'"
-                />
-                
+                <input v-model="formData.memoSeq" type="text" :disabled="loadingSeq" :class="[
+                  'w-32 p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm text-center disabled:bg-gray-100',
+                  errors.memoSeq ? 'border-red-500 focus:border-red-500' : ''
+                ]" :placeholder="loadingSeq ? 'กำลังโหลด...' : 'เช่น 56'" />
+
                 <span class="text-gray-800 font-bold text-base shrink-0">
                   / {{ currentYearTh }}
                 </span>
 
-                <button 
-                  type="button"
-                  @click="handleCheckMemo"
-                  :disabled="checking || loadingSeq"
-                  class="shrink-0 p-2.5 px-5 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-xl shadow-sm transition-colors text-sm disabled:bg-gray-400"
-                >
+                <button type="button" @click="handleCheckMemo" :disabled="checking || loadingSeq"
+                  class="shrink-0 p-2.5 px-5 bg-gray-800 hover:bg-gray-900 text-white font-semibold rounded-xl shadow-sm transition-colors text-sm disabled:bg-gray-400">
                   {{ checking ? 'กำลังเช็ก...' : 'ตรวจสอบ' }}
                 </button>
               </div>
@@ -64,15 +51,10 @@
               เรื่อง
             </label>
             <div class="flex-1 w-full">
-              <input 
-                v-model="formData.subject"
-                type="text" 
-                :class="[
-                  'w-full p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm',
-                  errors.subject ? 'border-red-500 focus:border-red-500' : ''
-                ]"
-                placeholder="กรอกชื่อเรื่องบันทึกข้อความ"
-              />
+              <input v-model="formData.subject" type="text" :class="[
+                'w-full p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm',
+                errors.subject ? 'border-red-500 focus:border-red-500' : ''
+              ]" placeholder="กรอกชื่อเรื่องบันทึกข้อความ" />
               <p v-if="errors.subject" class="text-red-500 text-xs mt-1.5 font-medium">
                 {{ errors.subject }}
               </p>
@@ -84,15 +66,10 @@
               เรียน
             </label>
             <div class="flex-1 w-full">
-              <input 
-                v-model="formData.attendTo"
-                type="text" 
-                :class="[
-                  'w-full p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm',
-                  errors.attendTo ? 'border-red-500 focus:border-red-500' : ''
-                ]"
-                placeholder="กรอกตำแหน่งหรือชื่อผู้รับ"
-              />
+              <input v-model="formData.attendTo" type="text" :class="[
+                'w-full p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm',
+                errors.attendTo ? 'border-red-500 focus:border-red-500' : ''
+              ]" placeholder="กรอกตำแหน่งหรือชื่อผู้รับ" />
               <p v-if="errors.attendTo" class="text-red-500 text-xs mt-1.5 font-medium">
                 {{ errors.attendTo }}
               </p>
@@ -104,34 +81,38 @@
               ผู้ดำเนินการ
             </label>
             <div class="flex-1 w-full">
-              <input 
-                v-model="formData.operator"
-                type="text" 
-                disabled
-                class="w-full p-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 font-medium cursor-not-allowed text-sm shadow-sm"
-              />
+              <input v-model="formData.operator" type="text" disabled
+                class="w-full p-2.5 border border-gray-200 rounded-xl bg-gray-50 text-gray-500 font-medium cursor-not-allowed text-sm shadow-sm" />
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-start gap-2">
+            <label class="w-full md:w-48 text-gray-800 font-semibold text-base md:pt-2.5">
+              ลงวันที่
+            </label>
+            <div class="flex-1 w-full">
+              <input v-model="formData.memo_date" type="date"
+                class="w-full p-2.5 border border-gray-300 rounded-xl bg-white text-black font-medium focus:outline-none focus:border-blue-500 transition-colors text-sm shadow-sm" />
+              <!-- แสดงวันที่เป็น พ.ศ. -->
+              <p class="text-gray-500 text-xs mt-1.5">
+                📅 {{ displayDate }}
+              </p>
             </div>
           </div>
 
           <div class="pt-4 flex justify-end gap-2 border-t">
-            <button 
-              type="button"
-              @click="router.push('/memos')"
-              class="px-6 py-2.5 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-            >
+            <button type="button" @click="router.push('/memos')"
+              class="px-6 py-2.5 border border-gray-300 rounded-xl font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-sm">
               ยกเลิก
             </button>
-            <button 
-              type="submit" 
-              :disabled="submitting || loadingSeq"
-              class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md transition-colors text-sm disabled:bg-gray-400"
-            >
+            <button type="submit" :disabled="submitting || loadingSeq"
+              class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl shadow-md transition-colors text-sm disabled:bg-gray-400">
               {{ submitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล' }}
             </button>
           </div>
         </form>
-      </div> 
-    </div> 
+      </div>
+    </div>
   </div>
 </template>
 
@@ -140,7 +121,7 @@ import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useMemoStore } from '@/stores/memo'
 import { useAuthStore } from '@/stores/auth'
-import api from '@/api' 
+import api from '@/api'
 
 const memoStore = useMemoStore()
 const authStore = useAuthStore()
@@ -156,11 +137,12 @@ const currentYearTh = computed(() => new Date().getFullYear() + 543)
 
 // รีแอคทีฟฟอร์ม
 const formData = reactive({
-  memoSeq: '', 
+  memoSeq: '',
   subject: '',
-  attendTo: 'ผู้อำนวยการวิทยาลัยเทคนิคเลย', 
-  operator: 'กำลังโหลดข้อมูลผู้ดำเนินการ...', 
-  content: 'บันทึกข้อความภายในสถานศึกษา' 
+  attendTo: 'ผู้อำนวยการวิทยาลัยเทคนิคเลย',
+  operator: 'กำลังโหลดข้อมูลผู้ดำเนินการ...',
+  content: 'บันทึกข้อความภายในสถานศึกษา',
+  memo_date: new Date().toISOString().split('T')[0] // ← default วันนี้ (CE format)
 })
 
 const errors = reactive({
@@ -174,7 +156,7 @@ const fetchOperatorProfile = async (email) => {
   try {
     // ยิงไปหาเส้นทาง /users ที่ดึงข้อมูลตาราง profiles อยู่แล้ว
     const response = await api.get('/users')
-    
+
     let profiles = []
     if (response && response.data) {
       profiles = response.data.data || response.data || []
@@ -182,13 +164,13 @@ const fetchOperatorProfile = async (email) => {
 
     // ค้นหาผู้ใช้งานที่อีเมลตรงกัน
     const matchedUser = profiles.find(p => p.email?.toLowerCase() === email?.toLowerCase())
-    
+
     if (matchedUser && matchedUser.full_name) {
       formData.operator = matchedUser.full_name // เอาชื่อจริงไปพ่นที่หน้าจอเลยครับอ้าย
     } else {
       // เคสสำรองเผื่อไม่พบข้อมูลในตาราง
-      const storeName = authStore.user?.full_name || 
-                        authStore.user?.user_metadata?.full_name
+      const storeName = authStore.user?.full_name ||
+        authStore.user?.user_metadata?.full_name
       formData.operator = storeName || email
     }
   } catch (error) {
@@ -202,7 +184,7 @@ const fetchNextMemoNumber = async () => {
   loadingSeq.value = true
   try {
     const response = await api.get('/memos')
-    
+
     let memos = []
     if (response.data && response.data.data && Array.isArray(response.data.data)) {
       memos = response.data.data
@@ -237,7 +219,7 @@ onMounted(async () => {
   const userStoreEmail = authStore.user?.email
   const userStorageEmail = JSON.parse(localStorage.getItem('user'))?.email
   const currentEmail = userStoreEmail || userStorageEmail || 'admin@loeitech.ac.th'
-  
+
   // เซ็ตค่า Email ดิบเก็บไว้ใช้ตอนส่ง Payload ไปหลังบ้าน
   userEmailRaw.value = currentEmail
 
@@ -261,14 +243,14 @@ const handleCheckMemo = async () => {
   try {
     errors.memoSeq = ''
     const response = await api.get('/memos')
-    
+
     let memos = []
     if (response.data && response.data.data && Array.isArray(response.data.data)) {
       memos = response.data.data
     } else if (response.data && Array.isArray(response.data)) {
       memos = response.data
     }
-    
+
     const isDuplicate = memos.some(m => m.memo_number === fullMemoNumber)
 
     if (isDuplicate) {
@@ -322,10 +304,10 @@ const handleSubmit = async () => {
     const payload = {
       memo_number: finalMemoNumber,
       subject: formData.subject.trim(),
-      recipient: formData.attendTo.trim(), 
-      operator: userEmailRaw.value, 
+      recipient: formData.attendTo.trim(),
       content: formData.content,
-      status: 'draft' 
+      memo_date:   formData.memo_date,  // ← เพิ่ม
+      status: 'draft'
     }
 
     await memoStore.createMemo(payload, {
@@ -334,12 +316,12 @@ const handleSubmit = async () => {
       }
     })
 
-    alert('ยอดเยี่ยม! บันทึกข้อมูลลงฐานข้อมูลผ่าน Store สำเร็จแล้ว!')
-    
+    alert('บันทึกข้อมูลแล้ว')
+
     // เคลียร์ฟอร์ม
     formData.memoSeq = ''
     formData.subject = ''
-    
+
     // ย้ายหน้ากลับไปที่คลังบันทึกข้อความ
     router.push('/memos')
 
@@ -350,4 +332,13 @@ const handleSubmit = async () => {
     submitting.value = false
   }
 }
+
+// แปลงวันที่ CE → แสดงเป็น พ.ศ.
+const displayDate = computed(() => {
+  if (!formData.memo_date) return ''
+  const [y, m, d] = formData.memo_date.split('-')
+  const monthNames = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน',
+    'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม']
+  return `${parseInt(d)} ${monthNames[parseInt(m) - 1]} ${parseInt(y) + 543}`
+})
 </script>
