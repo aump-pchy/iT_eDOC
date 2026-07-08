@@ -1,0 +1,1 @@
+INSERT INTO "public"."memo_sequences" ("year_be", "last_seq") VALUES (2567, 31), (2568, 15), (2569, 3);

@@ -1,14 +1,26 @@
-// ============================================
+// ============================================================
 // config/db.js
-// ตั้งค่าเชื่อมต่อ Supabase
-// ไฟล์อื่นๆ import ไปใช้เพื่อดึง/บันทึกข้อมูล
-// ============================================
+// PostgreSQL connection pool (แทน Supabase client)
+// ============================================================
 
-const { createClient } = require('@supabase/supabase-js')
+const { Pool } = require('pg')
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
-)
+const pool = new Pool({
+  host:     process.env.DB_HOST     || 'postgres',
+  port:     parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME     || 'itedoc',
+  user:     process.env.DB_USER     || 'itedoc',
+  password: process.env.DB_PASSWORD || 'secret',
+})
 
-module.exports = supabase
+// ทดสอบการเชื่อมต่อเมื่อ server เริ่มต้น
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ ไม่สามารถเชื่อมต่อ PostgreSQL ได้:', err.message)
+  } else {
+    console.log('✅ PostgreSQL เชื่อมต่อสำเร็จ')
+    release()
+  }
+})
+
+module.exports = pool
