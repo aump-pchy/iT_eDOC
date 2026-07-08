@@ -1,0 +1,29 @@
+name: Deploy iT-e-Document to College Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.LTC_HOST }}
+          username: ${{ secrets.LTC_USER }}
+          password: ${{ secrets.LTC_PW }}
+          port: ${{ secrets.LTC_PORT || 22 }}
+          script: |
+            cd /home/${{ secrets.LTC_USER }}/Git_iT_eDOC
+            git pull origin main
+            docker-compose down --remove-orphans
+            docker-compose up -d --build
+            # ตั้งค่าให้ MinIO เป็น Public Download อัตโนมัติหลังขึ้นระบบ
+            docker exec -i itedoc_minio mc alias set local http://localhost:9000 minioadmin minioadmin
+            docker exec -i itedoc_minio mc anonymous set download local/memos-pdf

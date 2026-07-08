@@ -1,127 +1,97 @@
-// ============================================
+// ============================================================
 // controllers/userController.js
-// ============================================
+// จัดการผู้ใช้งาน (Admin เท่านั้น)
+// ใช้ pg (raw SQL) แทน Supabase client
+// ============================================================
 
-const bcrypt   = require('bcryptjs')
-const supabase = require('../config/db')
+const bcrypt = require('bcryptjs')
+const pool   = require('../config/db')
 
 // GET /api/users
 exports.getAll = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, full_name, email, role, department, created_at,status')
-      .order('created_at', { ascending: false })
-
-    if (error) return res.status(400).json({ error: error.message })
-    res.status(200).json(data)
+    const { rows } = await pool.query(
+      'SELECT id, full_name, email, role, department, created_at, status FROM profiles ORDER BY created_at DESC'
+    )
+    res.status(200).json(rows)
   } catch (err) {
+    console.error('🔥 getAll users error:', err)
     res.status(500).json({ error: 'เกิดข้อผิดพลาดในการดึงข้อมูล' })
   }
 }
 
-// POST /api/users
+// POST /api/users (สร้างโดย Admin)
 exports.create = async (req, res) => {
   try {
-    console.log("📥 req.body:", req.body)
     const { full_name, email, password, role, department } = req.body
 
     if (!full_name || !email || !password) {
       return res.status(400).json({ error: 'กรุณากรอกข้อมูล ชื่อ-นามสกุล, อีเมล และรหัสผ่าน ให้ครบถ้วน' })
     }
 
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('email', email)
-      .maybeSingle()
-
-    if (existingUser) {
+    const { rows: existing } = await pool.query(
+      'SELECT email FROM profiles WHERE email = $1',
+      [email]
+    )
+    if (existing.length > 0) {
       return res.status(400).json({ error: 'อีเมลนี้ถูกใช้งานในระบบแล้ว' })
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const { data: newUser, error: insertError } = await supabase
-      .from('profiles')
-      .insert([{
-        full_name,
-        email,
-        password: hashedPassword,
-        role: role || 'user',
-        department: department || '-'
-      }])
-      .select('id, full_name, email, role, department, created_at')
-      .single()
-
-    if (insertError) {
-      return res.status(400).json({ 
-        error: "Supabase ปฏิเสธการบันทึก", 
-        details: insertError.message
-      })
-    }
+    const { rows } = await pool.query(
+      `INSERT INTO profiles (full_name, email, password, role, department, status)
+       VALUES ($1, $2, $3, $4, $5, 'active')
+       RETURNING id, full_name, email, role, department, created_at`,
+      [full_name, email, hashedPassword, role || 'user', department || '-']
+    )
 
     res.status(201).json({
       message: 'สร้างผู้ใช้งานสำเร็จ',
-      user: newUser
+      user: rows[0]
     })
   } catch (err) {
-    res.status(500).json({ 
-      error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์ (Internal Error)', 
-      message: err.message 
-    })
+    console.error('🔥 create user error:', err)
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์' })
   }
 }
 
-// ──────────────────────────────────────────
 // PUT /api/users/:id
 exports.update = async (req, res) => {
   try {
     const { id } = req.params
     const { full_name, role, department, password } = req.body
 
-    const { data: userCheck, error: checkError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', id)
-      .single() // ใส่ single เพื่อความแม่นยำในการดึงข้อมูลรายบุคคล
-
-    if (checkError) {
-      return res.status(400).json({ error: 'เกิดข้อผิดพลาดในการเช็คข้อมูล', details: checkError.message })
-    }
-
-    if (!userCheck || userCheck.length === 0) {
+    const { rows: check } = await pool.query(
+      'SELECT id FROM profiles WHERE id = $1',
+      [id]
+    )
+    if (check.length === 0) {
       return res.status(404).json({ error: 'ไม่พบผู้ใช้งานนี้ในระบบ' })
     }
 
-    // ✅ สร้าง object สำหรับ update
-    const updateData = {
-      full_name,
-      role,
-      department
-    }
+    let queryStr = `UPDATE profiles SET full_name = $1, role = $2, department = $3`
+    let params = [full_name, role, department, id]
 
-    // ✅ ถ้ามีการส่ง password มาด้วย ให้ hash ก่อนบันทึก
     if (password && password.trim() !== '') {
-      updateData.password = await bcrypt.hash(password, 10)
+      const hashedPassword = await bcrypt.hash(password, 10)
+      queryStr += `, password = $5 WHERE id = $4`
+      params.push(hashedPassword)
+    } else {
+      queryStr += ` WHERE id = $4`
     }
 
-    const { data: updatedUser, error: updateError } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', id)
-      .select('id, full_name, email, role, department')
+    queryStr += ` RETURNING id, full_name, email, role, department`
 
-    if (updateError) {
-      return res.status(400).json({ error: 'อัปเดตข้อมูลไม่สำเร็จ', details: updateError.message })
-    }
+    const { rows } = await pool.query(queryStr, params)
 
     res.status(200).json({
       message: 'อัปเดตข้อมูลผู้ใช้สำเร็จ',
-      user: updatedUser
+      user: rows[0]
     })
   } catch (err) {
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์', message: err.message })
+    console.error('🔥 update user error:', err)
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดระดับเซิร์ฟเวอร์' })
   }
 }
 
@@ -134,62 +104,53 @@ exports.remove = async (req, res) => {
       return res.status(400).json({ error: 'คุณไม่สามารถลบบัญชีของตัวเองได้' })
     }
 
-    const { data: userCheck, error: checkError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', id)
-      .single()
-
-    if (!userCheck) {
+    const { rows: check } = await pool.query(
+      'SELECT id FROM profiles WHERE id = $1',
+      [id]
+    )
+    if (check.length === 0) {
       return res.status(404).json({ error: 'ไม่พบผู้ใช้งานนี้ในระบบ' })
     }
 
-    const { error: deleteError } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id)
-
-    if (deleteError) {
-      return res.status(400).json({ error: deleteError.message })
-    }
+    await pool.query('DELETE FROM profiles WHERE id = $1', [id])
 
     res.status(200).json({ message: 'ลบผู้ใช้งานออกจากระบบสำเร็จ' })
-
   } catch (err) {
-    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน', message: err.message })
+    console.error('🔥 remove user error:', err)
+    res.status(500).json({ error: 'เกิดข้อผิดพลาดในการลบผู้ใช้งาน' })
   }
 }
 
+// PUT /api/users/:id/approve
 exports.approve = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .update({ status: 'active' })
-      .eq('id', req.params.id)
-      .select().single()
-    if (error) throw error
-    res.json({ message: 'อนุมัติผู้ใช้สำเร็จ', data })
+    const { rows } = await pool.query(
+      `UPDATE profiles SET status = 'active' WHERE id = $1 RETURNING *`,
+      [req.params.id]
+    )
+    res.json({ message: 'อนุมัติผู้ใช้สำเร็จ', data: rows[0] })
   } catch (err) {
+    console.error('🔥 approve user error:', err)
     res.status(500).json({ error: err.message })
   }
 }
 
+// PUT /api/users/:id/reset-password
 exports.resetPassword = async (req, res) => {
   try {
     const { new_password } = req.body
     if (!new_password) return res.status(400).json({ error: 'กรุณาระบุรหัสผ่านใหม่' })
 
-    const bcrypt = require('bcryptjs')
     const hashed = await bcrypt.hash(new_password, 10)
 
-    await supabase.from('profiles')
-      .update({ password: hashed })
-      .eq('id', req.params.id)
+    await pool.query(
+      'UPDATE profiles SET password = $1 WHERE id = $2',
+      [hashed, req.params.id]
+    )
 
     res.json({ message: 'รีเซ็ตรหัสผ่านสำเร็จ' })
   } catch (err) {
+    console.error('🔥 reset password error:', err)
     res.status(500).json({ error: err.message })
   }
 }
-
-
