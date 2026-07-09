@@ -54,7 +54,7 @@ exports.login = async (req, res) => {
     // สร้าง JWT Token
     const token = jwt.sign(
       { id: user.id, role: user.role },
-      process.env.JWT_SECRET,
+      process.env.JWT_SECRET || 'iT-e-DOC@LoeiTech#2569!SecretKey',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     )
 
