@@ -1,4 +1,4 @@
-﻿const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
 
 function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization || ''
@@ -11,7 +11,7 @@ function verifyToken(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'iT-e-DOC@LoeiTech#2569!SecretKey')
     req.user = decoded
     next()
   } catch (err) {
